@@ -1,0 +1,20 @@
+[
+  {
+    "original_text": "Niranjan Das is a prominent figure in both the Ravidassia religion and the field of engineering. He is the head of Dera Sach Khand and has been a leader in the Ravidassia community since 2010. His leadership was further solidified after he survived a violent attack in Vienna, which resulted in gunshot wounds and the death of his deputy. Despite these challenges, he continues to be a significant figure in the Ravidassia community and has received Z level security from the Punjab police.\n",
+    "summary": "Niranjan Das is a prominent figure in both the Ravidassia religion and the field of engineering. His leadership was further solidified after he survived a violent attack in Vienna, which resulted in gunshot wounds and the death of his deputy.",
+    "model": "t5-base",
+    "timestamp": "2026-03-17 15:01:38"
+  },
+  {
+    "original_text": "Niranjan Das is a prominent figure in both the Ravidassia religion and the field of engineering. He is the head of Dera Sach Khand and has been a leader in the Ravidassia community since 2010. His leadership was further solidified after he survived a violent attack in Vienna, which resulted in gunshot wounds and the death of his deputy. Despite these challenges, he continues to be a significant figure in the Ravidassia community and has received Z level security from the Punjab police.",
+    "summary": "Niranjan Das is a prominent figure in the Ravidassia religion and the field of engineering. He is the head of Dera Sach Khand and has been a leader in the community since 2010. His leadership was further solidified after he survived a violent attack in Vienna.",
+    "model": "facebook/bart-large-cnn",
+    "timestamp": "2026-03-17 15:03:38"
+  },
+  {
+    "original_text": "Niranjan Das is a prominent figure in both the Ravidassia religion and the field of engineering. He is the head of Dera Sach Khand and has been a leader in the Ravidassia community since 2010. His leadership was further solidified after he survived a violent attack in Vienna, which resulted in gunshot wounds and the death of his deputy. Despite these challenges, he continues to be a significant figure in the Ravidassia community and has received Z level security from the Punjab police.",
+    "summary": "Niranjan Das is a prominent figure in the Ravidassia religion and the field of engineering. He is the head of Dera Sach Khand and has been a leader in the community since 2010. His leadership was further solidified after he survived a violent attack in Vienna.",
+    "model": "facebook/bart-large-cnn",
+    "timestamp": "2026-03-17 15:09:38"
+  }
+]

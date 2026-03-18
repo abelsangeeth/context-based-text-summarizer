@@ -1,0 +1,53 @@
+models:
+  t5-base:
+    hf_name: "t5-base"
+    task: "summarization"
+    max_input: 512
+    max_output: 512
+    min_output: 80
+    color: "#3B82F6"
+    label: "T5 Base"
+
+  t5-large:
+    hf_name: "t5-large"
+    task: "summarization"
+    max_input: 512
+    max_output: 512
+    min_output: 80
+    color: "#10B981"
+    label: "T5 Large"
+
+  bart-cnn:
+    hf_name: "facebook/bart-large-cnn"
+    task: "summarization"
+    max_input: 1024
+    max_output: 512
+    min_output: 80
+    color: "#F97316"
+    label: "BART CNN"
+
+  pegasus:
+    hf_name: "google/pegasus-cnn_dailymail"
+    task: "summarization"
+    max_input: 1024
+    max_output: 512
+    min_output: 80
+    color: "#8B5CF6"
+    label: "PEGASUS"
+
+  mt5:
+    hf_name: "csebuetnlp/mT5_multilingual_XLSum"
+    task: "summarization"
+    max_input: 512
+    max_output: 512
+    min_output: 80
+    color: "#EF4444"
+    label: "mT5 Multilingual"
+
+weights:
+  ROUGE-1: 0.20
+  ROUGE-2: 0.20
+  ROUGE-L: 0.15
+  BLEU: 0.10
+  BERTScore_F1: 0.25
+  METEOR: 0.10
