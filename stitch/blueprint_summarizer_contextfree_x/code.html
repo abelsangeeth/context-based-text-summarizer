@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Blueprint Summarizer | ContextFree-X</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "outline-variant": "#c2c6d6",
+              "on-secondary-container": "#405682",
+              "surface-container-highest": "#e1e2ec",
+              "on-secondary-fixed": "#001a42",
+              "on-primary-fixed-variant": "#004395",
+              "surface-container-lowest": "#ffffff",
+              "secondary-container": "#b6ccff",
+              "surface-dim": "#d8d9e3",
+              "secondary-fixed-dim": "#b1c6f9",
+              "inverse-surface": "#2e3038",
+              "on-primary-fixed": "#001a42",
+              "tertiary": "#924700",
+              "on-tertiary-fixed-variant": "#723600",
+              "secondary": "#495e8a",
+              "on-tertiary-container": "#fffbff",
+              "primary-fixed": "#d8e2ff",
+              "inverse-primary": "#adc6ff",
+              "surface-variant": "#e1e2ec",
+              "on-secondary-fixed-variant": "#304671",
+              "error-container": "#ffdad6",
+              "surface-container": "#ecedf7",
+              "on-tertiary": "#ffffff",
+              "on-tertiary-fixed": "#311400",
+              "primary": "#0058be",
+              "surface-tint": "#005ac2",
+              "surface-container-low": "#f2f3fd",
+              "tertiary-container": "#b75b00",
+              "error": "#ba1a1a",
+              "tertiary-fixed-dim": "#ffb786",
+              "surface-bright": "#f9f9ff",
+              "on-secondary": "#ffffff",
+              "secondary-fixed": "#d8e2ff",
+              "primary-container": "#2170e4",
+              "tertiary-fixed": "#ffdcc6",
+              "background": "#f9f9ff",
+              "on-background": "#191b23",
+              "inverse-on-surface": "#eff0fa",
+              "surface-container-high": "#e6e7f2",
+              "on-primary-container": "#fefcff",
+              "on-surface-variant": "#424754",
+              "primary-fixed-dim": "#adc6ff",
+              "on-surface": "#191b23",
+              "on-error-container": "#93000a",
+              "surface": "#f9f9ff",
+              "on-primary": "#ffffff",
+              "outline": "#727785",
+              "on-error": "#ffffff"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface">
+<!-- SideNavBar (Execution from JSON) -->
+<aside class="fixed left-0 top-0 h-full z-40 flex flex-col h-screen w-64 border-r-0 bg-slate-50 dark:bg-slate-950">
+<div class="px-6 py-8">
+<h1 class="text-xl font-bold tracking-tighter text-blue-600 dark:text-blue-400">ContextFree-X</h1>
+<p class="text-xs font-label uppercase tracking-widest text-on-surface-variant mt-1">Architectural Curator</p>
+</div>
+<nav class="flex-1 px-4 space-y-1">
+<a class="flex items-center px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 transition-colors font-['Manrope'] font-semibold tracking-tight text-sm rounded-xl" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="summarize">summarize</span>
+                Summarize
+            </a>
+<a class="flex items-center px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 transition-colors font-['Manrope'] font-semibold tracking-tight text-sm rounded-xl" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="compare_arrows">compare_arrows</span>
+                Compare Models
+            </a>
+<a class="flex items-center px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 transition-colors font-['Manrope'] font-semibold tracking-tight text-sm rounded-xl" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="dashboard">dashboard</span>
+                Metrics Dashboard
+            </a>
+<a class="flex items-center px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 transition-colors font-['Manrope'] font-semibold tracking-tight text-sm rounded-xl" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="layers">layers</span>
+                Batch Evaluate
+            </a>
+<a class="flex items-center px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 transition-colors font-['Manrope'] font-semibold tracking-tight text-sm rounded-xl" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="language">language</span>
+                Multilingual
+            </a>
+<!-- Active State: Blueprint Summarizer -->
+<a class="flex items-center px-4 py-3 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-r-4 border-blue-600 font-['Manrope'] font-semibold tracking-tight text-sm rounded-xl" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="architecture">architecture</span>
+                Blueprint Summarizer
+            </a>
+</nav>
+<div class="p-4 mt-auto">
+<div class="bg-surface-container-low rounded-xl p-4 flex items-center gap-3">
+<img alt="Research Lab Logo" class="w-8 h-8 rounded-lg bg-primary-container p-1" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXXSFHOu3aWzFkp_9Z9nJJSCfkgp9FUxtzxXG_mx1p03Hr5ZItM-tF5OB6u6UXRfEInAaTual6GCnOKN8QT5kVtxBqh5CRtYI5idDZtFEK7tC5f1M-mqPNLrsFjhFQLon-Hyo1ynPAPW_q5TphyoqLh9SQCJTe6PYxJJ1-5oqc6u1I1hBCqZigvifY_c3R50Fp1o9yn9sTgKd-rZBUWNaAiHshgBtwE1Gc_HLI15T1jFxv4Q1PPiWqP_uvb202zN8_jZ9fJ1Yux68"/>
+<div>
+<p class="text-xs font-bold">Lab v2.4</p>
+<p class="text-[10px] text-on-surface-variant">Enterprise Tier</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 min-h-screen flex flex-col">
+<!-- TopNavBar (Execution from JSON) -->
+<header class="flex justify-between items-center w-full px-6 py-3 z-50 sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm dark:shadow-none">
+<div class="flex items-center gap-4">
+<h2 class="text-lg font-black tracking-tight text-slate-900 dark:text-slate-50">Blueprint Summarizer</h2>
+<div class="h-4 w-px bg-outline-variant/30 mx-2"></div>
+<nav class="flex gap-6 font-['Inter'] text-sm font-medium">
+<span class="text-blue-600 dark:text-blue-400 font-bold">Editor</span>
+<span class="text-slate-600 dark:text-slate-400 hover:text-blue-50 transition-opacity cursor-pointer">Export</span>
+<span class="text-slate-600 dark:text-slate-400 hover:text-blue-50 transition-opacity cursor-pointer">History</span>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative group focus-within:ring-2 focus-within:ring-blue-500/20 rounded-lg">
+<span class="absolute inset-y-0 left-3 flex items-center text-on-surface-variant">
+<span class="material-symbols-outlined text-sm" data-icon="search">search</span>
+</span>
+<input class="bg-surface-container-low border-none rounded-lg pl-10 pr-4 py-2 text-sm w-64 focus:ring-0" placeholder="Search blueprints..." type="text"/>
+</div>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="dark_mode">dark_mode</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<img alt="User Researcher Profile" class="w-8 h-8 rounded-full border-2 border-primary/20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDGDvwrz4d3qjs_Cf0ah6X-g1kC5nPEPP8GEIMixHRHYLRHJ_JfAed-0rAyw4meM7bDotH8-ksraYi23seRTzOyC5xIrXzBdLAO6KzVrJDjjlDIJDTcFokHFK-SWLST6vwGYC7r5m2x9xed_pO70Naw70ZHAGske2GfGOH7hQ_WpMShVN7F_b167CKlmmIGfDZLVeVKDHh5F1MbD9ZBXGaJa-aVdsYZtoDgGNB3fTc9va0_W3luJamiHgWIiqw5C9zA5IGtW4DT_E"/>
+</div>
+</header>
+<!-- Canvas Content -->
+<div class="p-8 max-w-7xl mx-auto w-full space-y-10">
+<!-- Bento Layout Container -->
+<div class="grid grid-cols-12 gap-8">
+<!-- Upload Zone & Preview (Asymmetric Focus) -->
+<div class="col-span-12 lg:col-span-7 space-y-8">
+<section class="bg-surface-container-lowest rounded-xl p-8 border-2 border-dashed border-outline-variant/40 hover:border-primary/40 transition-all flex flex-col items-center justify-center text-center min-h-[400px]">
+<div class="w-16 h-16 bg-primary-fixed rounded-full flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="cloud_upload">cloud_upload</span>
+</div>
+<h3 class="font-headline text-2xl font-semibold mb-2">Upload Floor Plan</h3>
+<p class="text-on-surface-variant max-w-sm mb-8">Drop your CAD exports, high-res JPEGs, or PDF blueprints here for architectural decomposition.</p>
+<div class="flex gap-4">
+<button class="bg-primary text-on-primary px-6 py-3 rounded-xl font-label text-sm font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-sm" data-icon="upload_file">upload_file</span>
+                                Select File
+                            </button>
+<button class="bg-surface-container-high text-on-secondary-container px-6 py-3 rounded-xl font-label text-sm font-semibold hover:bg-surface-container-highest transition-colors">
+                                Browse Gallery
+                            </button>
+</div>
+<p class="mt-6 text-[10px] text-outline uppercase tracking-widest">Supported formats: PDF, DWG, PNG, JPEG (MAX 50MB)</p>
+</section>
+<!-- Room Analysis Tags -->
+<section class="space-y-4">
+<div class="flex items-center justify-between">
+<h4 class="font-headline text-lg font-semibold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="sensor_door">sensor_door</span>
+                                Detected Room Taxonomy
+                            </h4>
+<span class="text-xs font-label text-on-surface-variant bg-surface-container-high px-2 py-1 rounded">12 Entities Found</span>
+</div>
+<div class="flex flex-wrap gap-2">
+<!-- Context Chips -->
+<span class="bg-surface-container-highest text-on-surface text-xs font-label px-4 py-2 rounded-md border-l-2 border-primary flex items-center gap-2">
+                                Master Suite <span class="text-[10px] text-primary font-bold">L1</span>
+</span>
+<span class="bg-surface-container-highest text-on-surface text-xs font-label px-4 py-2 rounded-md flex items-center gap-2">
+                                Kitchen/Dining <span class="text-[10px] text-on-surface-variant opacity-60">L1</span>
+</span>
+<span class="bg-surface-container-highest text-on-surface text-xs font-label px-4 py-2 rounded-md flex items-center gap-2">
+                                Home Office <span class="text-[10px] text-on-surface-variant opacity-60">L1</span>
+</span>
+<span class="bg-surface-container-highest text-on-surface text-xs font-label px-4 py-2 rounded-md flex items-center gap-2">
+                                Guest Bedroom <span class="text-[10px] text-on-surface-variant opacity-60">L2</span>
+</span>
+<span class="bg-surface-container-highest text-on-surface text-xs font-label px-4 py-2 rounded-md flex items-center gap-2">
+                                En-suite Bath <span class="text-[10px] text-on-surface-variant opacity-60">L2</span>
+</span>
+<span class="bg-surface-container-highest text-on-surface text-xs font-label px-4 py-2 rounded-md flex items-center gap-2">
+                                Gallery Hall <span class="text-[10px] text-on-surface-variant opacity-60">L1</span>
+</span>
+<span class="bg-surface-container-highest text-on-surface text-xs font-label px-4 py-2 rounded-md flex items-center gap-2">
+                                Media Room <span class="text-[10px] text-on-surface-variant opacity-60">L2</span>
+</span>
+<button class="bg-transparent border border-outline-variant/40 text-on-surface-variant text-xs font-label px-3 py-2 rounded-md hover:bg-surface-container-low transition-colors">
+                                + Add Label
+                            </button>
+</div>
+</section>
+</div>
+<!-- Right Column: Data & Summary -->
+<div class="col-span-12 lg:col-span-5 space-y-8">
+<!-- Property Summary Card (The "Architectural Curator" Hero) -->
+<section class="relative overflow-hidden bg-gradient-to-br from-primary to-primary-container text-on-primary-container p-8 rounded-xl shadow-xl shadow-primary/10">
+<div class="relative z-10">
+<span class="text-[10px] font-bold uppercase tracking-[0.2em] opacity-80 mb-4 block">Property Overview</span>
+<h3 class="font-headline text-3xl font-extrabold tracking-tight mb-2">Modernist Villa A-12</h3>
+<p class="text-sm opacity-90 leading-relaxed mb-6">Contemporary open-plan residence featuring high-ceiling structural elements and optimized natural light corridors. Total living area exceeds regional standards for luxury classification.</p>
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-white/10 backdrop-blur-sm p-4 rounded-lg">
+<p class="text-[10px] uppercase opacity-70">Total Area</p>
+<p class="text-xl font-bold">4,250 <span class="text-xs font-normal">sq ft</span></p>
+</div>
+<div class="bg-white/10 backdrop-blur-sm p-4 rounded-lg">
+<p class="text-[10px] uppercase opacity-70">Efficiency</p>
+<p class="text-xl font-bold">92.4%</p>
+</div>
+</div>
+</div>
+<!-- Decorative element -->
+<div class="absolute top-0 right-0 -mr-8 -mt-8 w-48 h-48 bg-white/5 rounded-full blur-3xl"></div>
+</section>
+<!-- Data Table: Area Calculations -->
+<section class="bg-surface-container-low rounded-xl p-6">
+<h4 class="font-headline text-md font-semibold mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="calculate">calculate</span>
+                            Area Distribution Metric
+                        </h4>
+<div class="overflow-hidden">
+<table class="w-full text-left text-sm">
+<thead>
+<tr class="text-on-surface-variant border-b border-outline-variant/20">
+<th class="pb-3 font-semibold">Room Name</th>
+<th class="pb-3 font-semibold">Area (Sq Ft)</th>
+<th class="pb-3 font-semibold text-right">Ratio</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/10">
+<tr class="group hover:bg-surface-container-high/50 transition-colors">
+<td class="py-4 font-medium">Master Suite</td>
+<td class="py-4 font-body">850</td>
+<td class="py-4 text-right">
+<span class="bg-primary/10 text-primary px-2 py-1 rounded-full text-[10px] font-bold">20.0%</span>
+</td>
+</tr>
+<tr class="group hover:bg-surface-container-high/50 transition-colors">
+<td class="py-4 font-medium">Kitchen/Dining</td>
+<td class="py-4 font-body">1,120</td>
+<td class="py-4 text-right">
+<span class="bg-primary/10 text-primary px-2 py-1 rounded-full text-[10px] font-bold">26.3%</span>
+</td>
+</tr>
+<tr class="group hover:bg-surface-container-high/50 transition-colors">
+<td class="py-4 font-medium">Home Office</td>
+<td class="py-4 font-body">340</td>
+<td class="py-4 text-right">
+<span class="bg-primary/10 text-primary px-2 py-1 rounded-full text-[10px] font-bold">8.0%</span>
+</td>
+</tr>
+<tr class="group hover:bg-surface-container-high/50 transition-colors">
+<td class="py-4 font-medium">Circulation Space</td>
+<td class="py-4 font-body">580</td>
+<td class="py-4 text-right">
+<span class="bg-primary/10 text-primary px-2 py-1 rounded-full text-[10px] font-bold">13.6%</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<button class="w-full mt-6 py-3 border border-primary/20 text-primary font-label text-xs font-semibold rounded-xl hover:bg-primary/5 transition-colors">
+                            View Comprehensive Report
+                        </button>
+</section>
+<!-- Key Takeaways (Curated Insight) -->
+<section class="bg-surface-container-highest p-6 rounded-xl space-y-4">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-tertiary" data-icon="lightbulb" style="font-variation-settings: 'FILL' 1;">lightbulb</span>
+<span class="text-xs font-bold uppercase tracking-tight text-tertiary">Curated Insight</span>
+</div>
+<div class="space-y-4">
+<div class="flex gap-4">
+<div class="w-1.5 h-auto bg-tertiary-container rounded-full"></div>
+<p class="text-xs text-on-surface-variant leading-relaxed">
+<strong class="text-on-surface">Flow Optimization:</strong> The kitchen-to-patio transition shows high potential for indoor-outdoor integration.
+                                </p>
+</div>
+<div class="flex gap-4">
+<div class="w-1.5 h-auto bg-tertiary-container rounded-full"></div>
+<p class="text-xs text-on-surface-variant leading-relaxed">
+<strong class="text-on-surface">Spatial Waste:</strong> Hallway dimensions in L2 exceed standard circulation requirements by 12%.
+                                </p>
+</div>
+</div>
+</section>
+</div>
+</div>
+<!-- Footer Meta -->
+<footer class="pt-10 border-t border-outline-variant/10 flex justify-between text-[10px] text-outline uppercase tracking-[0.2em] font-label">
+<div>Engine: Context-X Vision 4.0</div>
+<div>Last Analyzed: Oct 24, 2023 • 14:22 PM</div>
+<div>Status: High Confidence (98.2%)</div>
+</footer>
+</div>
+</main>
+</body></html>

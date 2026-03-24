@@ -3,7 +3,7 @@
 import streamlit as st
 from summarizer.models import list_models, get_model_label, get_model_color
 from summarizer.pipeline import summarize, summarize_long
-from input_handlers.text_cleaner import deep_clean
+from input_handlers.cleaner import clean_text as deep_clean
 from evaluation.aggregator import (
     evaluate_all, composite_score, pick_best_model,
     rank_models, generate_recommendation_text,
@@ -12,29 +12,17 @@ from evaluation.aggregator import (
 from components.model_card import render_model_card
 from components.export_utils import export_csv_button, export_summary_text, scores_to_dataframe
 
+from components.stitch_theme import apply_stitch_theme, page_header, best_badge, sidebar_brand, sidebar_nav, sidebar_footer
+
 st.set_page_config(page_title="Compare Models — ContextFree-X", page_icon="⚔️", layout="wide")
+apply_stitch_theme()
 
-st.markdown("""
-<style>
-    .block-container { padding-top: 2rem; max-width: 1400px; }
-    div[data-testid="metric-container"] {
-        background: rgba(100,100,100,0.08);
-        border-radius: 8px;
-        padding: 8px 12px;
-    }
-    .best-badge {
-        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-        color: white;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-    }
-</style>
-""", unsafe_allow_html=True)
+with st.sidebar:
+    sidebar_brand()
+    sidebar_nav(active="compare")
+    sidebar_footer()
 
-st.title("⚔️ Compare Models")
-st.caption("Run the same text through multiple models and compare quality side-by-side.")
+page_header("Compare Models", "Run the same text through multiple models and compare quality side-by-side.")
 
 # --- Input ---
 input_text = st.text_area(

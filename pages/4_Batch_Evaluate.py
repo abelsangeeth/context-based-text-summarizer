@@ -5,20 +5,21 @@ import pandas as pd
 import io
 from summarizer.models import list_models, get_model_label
 from summarizer.pipeline import summarize
-from input_handlers.text_cleaner import deep_clean
+from input_handlers.cleaner import clean_text as deep_clean
 from evaluation.aggregator import evaluate_all, composite_score
 from components.export_utils import export_csv_button
 
+from components.stitch_theme import apply_stitch_theme, page_header, sidebar_brand, sidebar_nav, sidebar_footer
+
 st.set_page_config(page_title="Batch Evaluate — ContextFree-X", page_icon="📦", layout="wide")
+apply_stitch_theme()
 
-st.markdown("""
-<style>
-    .block-container { padding-top: 2rem; max-width: 1200px; }
-</style>
-""", unsafe_allow_html=True)
+with st.sidebar:
+    sidebar_brand()
+    sidebar_nav(active="batch")
+    sidebar_footer()
 
-st.title("📦 Batch Evaluate")
-st.caption("Upload a CSV with text samples, run summarization and evaluation at scale.")
+page_header("Batch Evaluate", "Upload a CSV with text samples, run summarization and evaluation at scale.")
 
 # --- Instructions ---
 with st.expander("CSV format requirements", expanded=False):

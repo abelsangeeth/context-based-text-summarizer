@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ContextFree-X | Summarize</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "outline-variant": "#c2c6d6",
+                        "on-secondary-container": "#405682",
+                        "surface-container-highest": "#e1e2ec",
+                        "on-secondary-fixed": "#001a42",
+                        "on-primary-fixed-variant": "#004395",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#b6ccff",
+                        "surface-dim": "#d8d9e3",
+                        "secondary-fixed-dim": "#b1c6f9",
+                        "inverse-surface": "#2e3038",
+                        "on-primary-fixed": "#001a42",
+                        "tertiary": "#924700",
+                        "on-tertiary-fixed-variant": "#723600",
+                        "secondary": "#495e8a",
+                        "on-tertiary-container": "#fffbff",
+                        "primary-fixed": "#d8e2ff",
+                        "inverse-primary": "#adc6ff",
+                        "surface-variant": "#e1e2ec",
+                        "on-secondary-fixed-variant": "#304671",
+                        "error-container": "#ffdad6",
+                        "surface-container": "#ecedf7",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed": "#311400",
+                        "primary": "#0058be",
+                        "surface-tint": "#005ac2",
+                        "surface-container-low": "#f2f3fd",
+                        "tertiary-container": "#b75b00",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed-dim": "#ffb786",
+                        "surface-bright": "#f9f9ff",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed": "#d8e2ff",
+                        "primary-container": "#2170e4",
+                        "tertiary-fixed": "#ffdcc6",
+                        "background": "#f9f9ff",
+                        "on-background": "#191b23",
+                        "inverse-on-surface": "#eff0fa",
+                        "surface-container-high": "#e6e7f2",
+                        "on-primary-container": "#fefcff",
+                        "on-surface-variant": "#424754",
+                        "primary-fixed-dim": "#adc6ff",
+                        "on-surface": "#191b23",
+                        "on-error-container": "#93000a",
+                        "surface": "#f9f9ff",
+                        "on-primary": "#ffffff",
+                        "outline": "#727785",
+                        "on-error": "#ffffff"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- SideNavBar Shell -->
+<aside class="fixed left-0 top-0 h-full z-40 flex flex-col h-screen w-64 border-r-0 bg-slate-50 dark:bg-slate-950 hidden md:flex">
+<div class="px-6 py-8">
+<h1 class="text-xl font-bold tracking-tighter text-blue-600 dark:text-blue-400">ContextFree-X</h1>
+<p class="text-xs font-['Manrope'] font-semibold tracking-tight text-slate-500 uppercase mt-1">Architectural Curator</p>
+</div>
+<nav class="flex-1 px-3 space-y-1">
+<!-- Summarize (Active) -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-r-4 border-blue-600 font-['Manrope'] font-semibold tracking-tight text-sm transition-colors Active: scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="summarize" style="font-variation-settings: 'FILL' 1;">summarize</span>
+                Summarize
+            </a>
+<!-- Compare Models -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors font-['Manrope'] font-semibold tracking-tight text-sm" href="#">
+<span class="material-symbols-outlined" data-icon="compare_arrows">compare_arrows</span>
+                Compare Models
+            </a>
+<!-- Metrics Dashboard -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors font-['Manrope'] font-semibold tracking-tight text-sm" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                Metrics Dashboard
+            </a>
+<!-- Batch Evaluate -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors font-['Manrope'] font-semibold tracking-tight text-sm" href="#">
+<span class="material-symbols-outlined" data-icon="layers">layers</span>
+                Batch Evaluate
+            </a>
+<!-- Multilingual -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors font-['Manrope'] font-semibold tracking-tight text-sm" href="#">
+<span class="material-symbols-outlined" data-icon="language">language</span>
+                Multilingual
+            </a>
+<!-- Blueprint Summarizer -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors font-['Manrope'] font-semibold tracking-tight text-sm" href="#">
+<span class="material-symbols-outlined" data-icon="architecture">architecture</span>
+                Blueprint Summarizer
+            </a>
+</nav>
+<div class="p-4 mt-auto">
+<div class="flex items-center gap-3 p-2 bg-slate-100 dark:bg-slate-900 rounded-xl">
+<img class="w-10 h-10 rounded-lg object-cover" data-alt="User Researcher Portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDLtBzIrrC04EoglQtHEeftQ4FpZ0r9d_oqoyaY8xQEGkss3tSnPbTMCJhMaMx964AFvyUkUjOp1ecrqQwBlhrnyrDDUgebecmvsyEaluIjeLXGU7uVEEZ7yRgD2ytxQWgf-PE5ZgPkj_mgjjel1tdMgN5WtcQUiRR0AmPZQp1XfouPp0gE8bsz_gAXqETMWItT1vwuHMDt1e9aIo_BDprIVbhqsJu12nPgFBCL1b42SL1Dh7tWWcjscX0izZLjWsT-9ZbVWGXruag"/>
+<div>
+<p class="text-xs font-bold text-on-surface">Alex Chen</p>
+<p class="text-[10px] text-on-surface-variant">Lead Researcher</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="md:ml-64 min-h-screen">
+<!-- TopNavBar Shell -->
+<header class="flex justify-between items-center w-full px-6 py-3 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 shadow-sm dark:shadow-none">
+<div class="flex items-center gap-8">
+<span class="text-lg font-black tracking-tight text-slate-900 dark:text-slate-50 md:hidden">ContextFree-X</span>
+<div class="hidden md:flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-full border border-outline-variant/20">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="auto_awesome" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="text-xs font-semibold text-on-surface-variant">Engine: Llama-3-70B-Architect</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block">
+<input class="bg-slate-50 dark:bg-slate-800 border-none rounded-full px-4 py-1.5 text-sm w-64 focus:ring-2 focus:ring-blue-500/20 transition-all" placeholder="Search research projects..." type="text"/>
+<span class="material-symbols-outlined absolute right-3 top-1.5 text-slate-400 text-sm" data-icon="search">search</span>
+</div>
+<button class="material-symbols-outlined p-2 text-slate-600 hover:text-blue-600 transition-opacity" data-icon="dark_mode">dark_mode</button>
+<button class="material-symbols-outlined p-2 text-slate-600 hover:text-blue-600 transition-opacity" data-icon="settings">settings</button>
+</div>
+</header>
+<!-- Page Header Content -->
+<section class="px-8 pt-10 pb-6 max-w-6xl mx-auto">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div class="space-y-2">
+<h2 class="text-4xl font-extrabold tracking-tighter text-on-surface">New Summary</h2>
+<p class="text-on-surface-variant font-medium">Distill complex datasets into architectural blueprints.</p>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex flex-col gap-1">
+<label class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant ml-1">Model Architecture</label>
+<select class="bg-surface-container-highest border-none text-sm font-semibold rounded-lg px-4 py-2.5 min-w-[200px] focus:ring-2 focus:ring-primary/20">
+<option>Neural-Distill-V4</option>
+<option>Context-Free-X-Large</option>
+<option>Semantic-Blueprinter</option>
+</select>
+</div>
+<button class="mt-auto bg-gradient-to-br from-primary to-primary-container text-white px-8 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-primary/20 hover:scale-[0.98] transition-transform">
+<span class="material-symbols-outlined text-sm" data-icon="bolt" style="font-variation-settings: 'FILL' 1;">bolt</span>
+                        Summarize
+                    </button>
+</div>
+</div>
+</section>
+<!-- Tabs Container -->
+<section class="px-8 max-w-6xl mx-auto mb-12">
+<div class="bg-surface-container-low rounded-2xl p-2 flex gap-1 mb-6 inline-flex border border-outline-variant/10">
+<button class="px-6 py-2 rounded-xl text-sm font-bold bg-white text-primary shadow-sm">Paste Text</button>
+<button class="px-6 py-2 rounded-xl text-sm font-semibold text-on-surface-variant hover:bg-surface-container-high transition-colors">Upload PDF</button>
+<button class="px-6 py-2 rounded-xl text-sm font-semibold text-on-surface-variant hover:bg-surface-container-high transition-colors">Enter URL</button>
+</div>
+<!-- Input Canvas (Asymmetric Layout) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<div class="lg:col-span-8">
+<div class="bg-surface-container-lowest rounded-3xl p-6 min-h-[400px] flex flex-col border border-outline-variant/10 shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<span class="text-[10px] font-black uppercase tracking-widest text-primary/60 px-3 py-1 bg-primary/5 rounded-full">Source Input</span>
+<span class="text-[10px] font-bold text-on-surface-variant">3,420 chars remaining</span>
+</div>
+<textarea class="flex-1 w-full border-none focus:ring-0 text-on-surface placeholder:text-outline/50 resize-none font-body text-lg leading-relaxed bg-transparent" placeholder="Paste your research paper, technical documentation, or meeting transcripts here..."></textarea>
+</div>
+</div>
+<div class="lg:col-span-4 space-y-6">
+<div class="bg-surface-container-low rounded-3xl p-6 border border-outline-variant/10">
+<h4 class="font-bold text-sm mb-4">Extraction Settings</h4>
+<div class="space-y-4">
+<div>
+<label class="block text-[10px] font-bold uppercase mb-2 text-on-surface-variant">Compression Ratio</label>
+<input class="w-full accent-primary h-1.5 bg-surface-container-high rounded-full appearance-none" type="range"/>
+<div class="flex justify-between text-[10px] mt-1 text-outline font-bold">
+<span>CONCISE</span>
+<span>DETAILED</span>
+</div>
+</div>
+<div class="flex items-center justify-between p-3 bg-surface-container-high/50 rounded-xl">
+<span class="text-xs font-semibold">Identify Entities</span>
+<div class="w-8 h-4 bg-primary rounded-full relative">
+<div class="absolute right-0.5 top-0.5 w-3 h-3 bg-white rounded-full"></div>
+</div>
+</div>
+<div class="flex items-center justify-between p-3 bg-surface-container-high/50 rounded-xl">
+<span class="text-xs font-semibold">Sentiment Analysis</span>
+<div class="w-8 h-4 bg-outline-variant rounded-full relative">
+<div class="absolute left-0.5 top-0.5 w-3 h-3 bg-white rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-primary/5 rounded-3xl p-6 border border-primary/10">
+<h4 class="font-bold text-sm text-primary mb-2">Pro Tip</h4>
+<p class="text-xs text-on-secondary-container leading-relaxed">
+                            Use "Blueprint Summarizer" for technical manuals to generate hierarchical component diagrams alongside text summaries.
+                        </p>
+</div>
+</div>
+</div>
+</section>
+<!-- Output Section (Generated Result) -->
+<section class="px-8 pb-20 max-w-6xl mx-auto">
+<div class="space-y-8">
+<div class="flex items-center gap-4">
+<div class="h-[1px] flex-1 bg-outline-variant/20"></div>
+<span class="text-[10px] font-black uppercase tracking-[0.2em] text-outline">Generated Output</span>
+<div class="h-[1px] flex-1 bg-outline-variant/20"></div>
+</div>
+<!-- Summary Card -->
+<div class="bg-surface-container-lowest rounded-[2.5rem] p-10 shadow-2xl shadow-on-surface/5 border border-outline-variant/10">
+<div class="flex flex-col md:flex-row justify-between gap-8 mb-10">
+<div class="max-w-2xl">
+<h3 class="text-2xl font-bold tracking-tight mb-4 text-on-surface">Executive Blueprint: Neural Network Compression Frameworks</h3>
+<p class="text-on-surface-variant leading-relaxed text-lg">
+                                The research paper introduces a novel approach to post-training quantization (PTQ) that maintains high precision for large-scale transformer models. By implementing a layer-wise importance metric, the system identifies non-critical neural pathways for aggressive pruning, resulting in a 40% reduction in memory footprint without exceeding 1% perplexity degradation. 
+                            </p>
+<p class="text-on-surface-variant leading-relaxed text-lg mt-6">
+                                Key architectural takeaways include the shift toward sub-8-bit precision for attention mechanisms and the role of dynamic calibration datasets in mitigating outlier-induced accuracy loss.
+                            </p>
+</div>
+<!-- Metrics Pills (The Context-Breadcrumb) -->
+<div class="flex flex-col gap-3 min-w-[200px]">
+<div class="bg-surface-container-low p-4 rounded-2xl flex flex-col gap-1">
+<span class="text-[10px] font-bold text-primary uppercase tracking-tighter">ROUGE-L Score</span>
+<span class="text-2xl font-black text-on-surface">0.842</span>
+</div>
+<div class="bg-surface-container-low p-4 rounded-2xl flex flex-col gap-1">
+<span class="text-[10px] font-bold text-secondary uppercase tracking-tighter">BERTScore</span>
+<span class="text-2xl font-black text-on-surface">0.915</span>
+</div>
+<div class="flex gap-3">
+<div class="bg-surface-container-high/40 flex-1 p-3 rounded-xl">
+<span class="block text-[8px] font-bold text-on-surface-variant uppercase">Ratio</span>
+<span class="text-sm font-bold">1:12</span>
+</div>
+<div class="bg-surface-container-high/40 flex-1 p-3 rounded-xl">
+<span class="block text-[8px] font-bold text-on-surface-variant uppercase">Abstract</span>
+<span class="text-sm font-bold">High</span>
+</div>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-8 border-t border-outline-variant/10">
+<div class="flex gap-2">
+<span class="px-3 py-1 bg-surface-container-high text-[10px] font-bold rounded-md">LLM-VERIFIED</span>
+<span class="px-3 py-1 bg-surface-container-high text-[10px] font-bold rounded-md">TECHNICAL_AUDIT</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex items-center gap-2 text-xs font-bold text-on-surface-variant px-4 py-2 hover:bg-surface-container-low rounded-lg transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="content_copy">content_copy</span>
+                                Copy
+                            </button>
+<button class="flex items-center gap-2 text-xs font-bold text-on-surface-variant px-4 py-2 hover:bg-surface-container-low rounded-lg transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="download">download</span>
+                                Export PDF
+                            </button>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Floating Action Button -->
+<button class="fixed bottom-8 right-8 w-14 h-14 bg-gradient-to-br from-primary to-primary-container text-white rounded-full flex items-center justify-center shadow-2xl shadow-primary/40 hover:scale-110 transition-transform z-50">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+</button>
+</body></html>

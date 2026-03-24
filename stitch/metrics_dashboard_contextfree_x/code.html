@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "outline-variant": "#c2c6d6",
+              "on-secondary-container": "#405682",
+              "surface-container-highest": "#e1e2ec",
+              "on-secondary-fixed": "#001a42",
+              "on-primary-fixed-variant": "#004395",
+              "surface-container-lowest": "#ffffff",
+              "secondary-container": "#b6ccff",
+              "surface-dim": "#d8d9e3",
+              "secondary-fixed-dim": "#b1c6f9",
+              "inverse-surface": "#2e3038",
+              "on-primary-fixed": "#001a42",
+              "tertiary": "#924700",
+              "on-tertiary-fixed-variant": "#723600",
+              "secondary": "#495e8a",
+              "on-tertiary-container": "#fffbff",
+              "primary-fixed": "#d8e2ff",
+              "inverse-primary": "#adc6ff",
+              "surface-variant": "#e1e2ec",
+              "on-secondary-fixed-variant": "#304671",
+              "error-container": "#ffdad6",
+              "surface-container": "#ecedf7",
+              "on-tertiary": "#ffffff",
+              "on-tertiary-fixed": "#311400",
+              "primary": "#0058be",
+              "surface-tint": "#005ac2",
+              "surface-container-low": "#f2f3fd",
+              "tertiary-container": "#b75b00",
+              "error": "#ba1a1a",
+              "tertiary-fixed-dim": "#ffb786",
+              "surface-bright": "#f9f9ff",
+              "on-secondary": "#ffffff",
+              "secondary-fixed": "#d8e2ff",
+              "primary-container": "#2170e4",
+              "tertiary-fixed": "#ffdcc6",
+              "background": "#f9f9ff",
+              "on-background": "#191b23",
+              "inverse-on-surface": "#eff0fa",
+              "surface-container-high": "#e6e7f2",
+              "on-primary-container": "#fefcff",
+              "on-surface-variant": "#424754",
+              "primary-fixed-dim": "#adc6ff",
+              "on-surface": "#191b23",
+              "on-error-container": "#93000a",
+              "surface": "#f9f9ff",
+              "on-primary": "#ffffff",
+              "outline": "#727785",
+              "on-error": "#ffffff"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased">
+<!-- SideNavBar Shell -->
+<aside class="fixed left-0 top-0 h-full z-40 flex flex-col h-screen w-64 bg-slate-50 dark:bg-slate-950 font-['Manrope'] font-semibold tracking-tight text-sm border-r-0">
+<div class="p-6">
+<h1 class="text-xl font-bold tracking-tighter text-blue-600 dark:text-blue-400">ContextFree-X</h1>
+<p class="text-xs font-medium text-on-surface-variant opacity-70">Architectural Curator</p>
+</div>
+<nav class="flex-1 px-3 space-y-1 overflow-y-auto no-scrollbar">
+<a class="flex items-center px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-200/50 transition-colors" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="summarize">summarize</span>
+                Summarize
+            </a>
+<a class="flex items-center px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-200/50 transition-colors" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="compare_arrows">compare_arrows</span>
+                Compare Models
+            </a>
+<a class="flex items-center px-4 py-3 rounded-xl bg-blue-50 text-blue-700 border-r-4 border-blue-600" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="dashboard">dashboard</span>
+                Metrics Dashboard
+            </a>
+<a class="flex items-center px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-200/50 transition-colors" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="layers">layers</span>
+                Batch Evaluate
+            </a>
+<a class="flex items-center px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-200/50 transition-colors" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="language">language</span>
+                Multilingual
+            </a>
+<a class="flex items-center px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-200/50 transition-colors" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="architecture">architecture</span>
+                Blueprint Summarizer
+            </a>
+</nav>
+<div class="p-4 border-t border-slate-200/50">
+<div class="flex items-center gap-3 px-2 py-3 rounded-xl bg-surface-container-low">
+<img alt="Lab Logo" class="w-8 h-8 rounded-lg bg-primary-container" data-alt="Research Lab Logo icon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmcMLsROMniogbGmXBm1HtAtFEUnKgq3u8ZyMhLhuctuTGVQveZrrAC3AmnNz1dOTmu2SG96mSjgLkphynBqgh16Qtq3UKSmrU8SiwzXnwtgAqtPeNm46khXhGTcIag3wcWtqZVPp_EJaseKd2pHjHjmMcpCMQAs7wpA9TGsqU3XxWt_IxAmKUgyOuYZHx5TqOT0PXCocWlKJPvkC71qtpCl_2fM6HZIZZhbd0Qn2LSevd1DD0u5x_uGx5QbV_suEzUBVs5W6CReo"/>
+<div class="overflow-hidden">
+<p class="text-xs font-bold truncate">Lab Alpha-9</p>
+<p class="text-[10px] text-on-surface-variant">Standard Access</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 min-h-screen flex flex-col">
+<!-- TopNavBar Shell -->
+<header class="flex justify-between items-center w-full px-6 py-3 z-50 sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm font-['Inter'] text-sm font-medium">
+<div class="flex items-center gap-4">
+<span class="text-lg font-black tracking-tight text-slate-900">Metrics Dashboard</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative group focus-within:ring-2 focus-within:ring-blue-500/20 rounded-full">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-lg" data-icon="search">search</span>
+<input class="bg-surface-variant border-none rounded-full py-1.5 pl-10 pr-4 w-64 focus:ring-0 text-sm" placeholder="Search benchmark data..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<button class="hover:text-blue-500 transition-opacity"><span class="material-symbols-outlined" data-icon="dark_mode">dark_mode</span></button>
+<button class="hover:text-blue-500 transition-opacity"><span class="material-symbols-outlined" data-icon="settings">settings</span></button>
+<div class="w-8 h-8 rounded-full bg-slate-200 overflow-hidden">
+<img alt="User Researcher Profile" data-alt="User profile picture of researcher" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB41dIhrzAPYsClpvBRbFldTxXpdodQpgXJTnaj-885w7NVt6dE7E1U_onY2SphsPHCB9rxO8cYq6HUBboT5ubhrY2wPi4DNkYKf-qJCzp2Wf9-euMauiW1T4F7KGFsm9SBCweCGoakWTqC-EdaGeyYSdHpWcKgTClrdw2dyX6ykyey4hSVO1diNHWuIpbV7SjtPkMAaeWEzZ1vX1rpQQhFkL-hlcy7UjNk4kYTjj5B_WOgtFDU74IkSFnB2UNHCMIHuICDkFoNC54"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Dashboard Content -->
+<div class="p-8 space-y-8">
+<!-- Page Header -->
+<div class="flex justify-between items-end">
+<div>
+<h2 class="font-headline text-3xl font-bold tracking-tight text-on-surface">Model Performance Analysis</h2>
+<p class="text-on-surface-variant max-w-2xl mt-2">Comparative evaluation of summarization architectures across standard linguistic and semantic metrics.</p>
+</div>
+<div class="flex gap-2">
+<span class="bg-surface-container-highest px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider text-on-secondary-container">Source: CNN/DailyMail</span>
+<span class="bg-surface-container-highest px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider text-on-secondary-container">Confidence: 98.4%</span>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-6">
+<!-- Main Visual: Radar Chart -->
+<div class="col-span-12 lg:col-span-8 bg-surface-container-low rounded-xl p-8 flex flex-col">
+<div class="flex justify-between items-start mb-6">
+<h3 class="font-headline text-xl font-semibold">Aggregate Semantic Coverage</h3>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-primary"></div><span class="text-xs font-medium">CF-X v2</span></div>
+<div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-secondary"></div><span class="text-xs font-medium">BART-Large</span></div>
+</div>
+</div>
+<div class="flex-1 flex items-center justify-center relative min-h-[400px]">
+<!-- Abstract Radar Chart Visualization -->
+<div class="w-80 h-80 relative flex items-center justify-center">
+<!-- Radar Hexagon Paths -->
+<div class="absolute inset-0 border-[1px] border-outline-variant/30 rounded-full scale-100"></div>
+<div class="absolute inset-0 border-[1px] border-outline-variant/30 rounded-full scale-75"></div>
+<div class="absolute inset-0 border-[1px] border-outline-variant/30 rounded-full scale-50"></div>
+<div class="absolute inset-0 border-[1px] border-outline-variant/30 rounded-full scale-25"></div>
+<!-- Axes Lines -->
+<div class="absolute w-full h-[1px] bg-outline-variant/20 rotate-0"></div>
+<div class="absolute w-full h-[1px] bg-outline-variant/20 rotate-60"></div>
+<div class="absolute w-full h-[1px] bg-outline-variant/20 rotate-120"></div>
+<!-- Model A Shape (Primary) -->
+<svg class="absolute inset-0 w-full h-full drop-shadow-xl overflow-visible" viewbox="0 0 100 100">
+<polygon fill="rgba(0, 88, 190, 0.15)" points="50,5 95,27.5 95,72.5 50,95 5,72.5 15,27.5" stroke="#0058be" stroke-width="1.5"></polygon>
+<circle cx="50" cy="5" fill="#0058be" r="3"></circle>
+<circle cx="95" cy="27.5" fill="#0058be" r="3"></circle>
+<circle cx="95" cy="72.5" fill="#0058be" r="3"></circle>
+<circle cx="50" cy="95" fill="#0058be" r="3"></circle>
+<circle cx="5" cy="72.5" fill="#0058be" r="3"></circle>
+<circle cx="15" cy="27.5" fill="#0058be" r="3"></circle>
+</svg>
+<!-- Model B Shape (Secondary) -->
+<svg class="absolute inset-0 w-full h-full overflow-visible" viewbox="0 0 100 100">
+<polygon fill="rgba(73, 94, 138, 0.1)" points="50,20 80,35 75,65 50,75 25,60 30,35" stroke="#495e8a" stroke-dasharray="2 2" stroke-width="1"></polygon>
+</svg>
+<!-- Labels -->
+<span class="absolute -top-8 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">ROUGE-1</span>
+<span class="absolute top-[18%] -right-12 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">ROUGE-2</span>
+<span class="absolute bottom-[18%] -right-12 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">BERTScore</span>
+<span class="absolute -bottom-8 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">BLEU</span>
+<span class="absolute bottom-[18%] -left-12 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">METEOR</span>
+<span class="absolute top-[18%] -left-12 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">ROUGE-L</span>
+</div>
+</div>
+</div>
+<!-- Ranking Section: Horizontal Bar Chart -->
+<div class="col-span-12 lg:col-span-4 bg-surface-container-highest rounded-xl p-8">
+<h3 class="font-headline text-xl font-semibold mb-8">Quick Rankings</h3>
+<div class="space-y-6">
+<!-- Model 1 -->
+<div class="space-y-2">
+<div class="flex justify-between items-center text-xs font-bold">
+<span>ContextFree-X v2</span>
+<span class="text-primary">94.2</span>
+</div>
+<div class="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary to-primary-container rounded-full" style="width: 94%;"></div>
+</div>
+</div>
+<!-- Model 2 -->
+<div class="space-y-2">
+<div class="flex justify-between items-center text-xs font-bold">
+<span>GPT-4 Turbo</span>
+<span class="text-on-surface">91.8</span>
+</div>
+<div class="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 91%;"></div>
+</div>
+</div>
+<!-- Model 3 -->
+<div class="space-y-2">
+<div class="flex justify-between items-center text-xs font-bold">
+<span>BART-Large</span>
+<span class="text-on-surface">86.5</span>
+</div>
+<div class="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 86%;"></div>
+</div>
+</div>
+<!-- Model 4 -->
+<div class="space-y-2">
+<div class="flex justify-between items-center text-xs font-bold">
+<span>T5-11B</span>
+<span class="text-on-surface">82.1</span>
+</div>
+<div class="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 82%;"></div>
+</div>
+</div>
+<!-- Model 5 -->
+<div class="space-y-2">
+<div class="flex justify-between items-center text-xs font-bold">
+<span>Pegasus</span>
+<span class="text-on-surface">78.4</span>
+</div>
+<div class="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 78%;"></div>
+</div>
+</div>
+</div>
+<div class="mt-12 p-4 bg-surface-container-low rounded-lg">
+<p class="text-[10px] leading-relaxed text-on-surface-variant font-medium">
+<span class="text-primary font-bold">Insight:</span> CF-X v2 demonstrates a 2.6% lead in semantic consistency (BERTScore) over current SOTA large-language models.
+                        </p>
+</div>
+</div>
+<!-- Data Table Section -->
+<div class="col-span-12 bg-surface-container-lowest border border-outline-variant/10 rounded-xl overflow-hidden">
+<div class="px-8 py-6 flex justify-between items-center">
+<h3 class="font-headline text-xl font-semibold">Detailed Breakdown</h3>
+<button class="flex items-center gap-2 text-xs font-bold text-primary px-4 py-2 hover:bg-primary/5 rounded-lg transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="download">download</span>
+                            Export CSV
+                        </button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="bg-surface-container-low/50 text-on-surface-variant">
+<th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest">Model Name</th>
+<th class="px-4 py-4 text-[10px] font-bold uppercase tracking-widest text-center">ROUGE-1</th>
+<th class="px-4 py-4 text-[10px] font-bold uppercase tracking-widest text-center">ROUGE-2</th>
+<th class="px-4 py-4 text-[10px] font-bold uppercase tracking-widest text-center">ROUGE-L</th>
+<th class="px-4 py-4 text-[10px] font-bold uppercase tracking-widest text-center">BERTScore</th>
+<th class="px-4 py-4 text-[10px] font-bold uppercase tracking-widest text-center">BLEU</th>
+<th class="px-4 py-4 text-[10px] font-bold uppercase tracking-widest text-center">METEOR</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/10">
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-8 py-5 flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<span class="font-bold text-sm">ContextFree-X v2</span>
+</td>
+<td class="px-4 py-5 text-center font-medium text-sm">48.2</td>
+<td class="px-4 py-5 text-center font-medium text-sm">26.1</td>
+<td class="px-4 py-5 text-center font-medium text-sm">45.8</td>
+<td class="px-4 py-5 text-center font-bold text-sm text-primary">0.942</td>
+<td class="px-4 py-5 text-center font-medium text-sm">18.5</td>
+<td class="px-4 py-5 text-center font-medium text-sm">31.2</td>
+</tr>
+<tr class="hover:bg-surface-container-high transition-colors">
+<td class="px-8 py-5 flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<span class="font-bold text-sm">GPT-4 Turbo</span>
+</td>
+<td class="px-4 py-5 text-center font-medium text-sm">47.5</td>
+<td class="px-4 py-5 text-center font-medium text-sm">25.3</td>
+<td class="px-4 py-5 text-center font-medium text-sm">44.9</td>
+<td class="px-4 py-5 text-center font-medium text-sm">0.918</td>
+<td class="px-4 py-5 text-center font-medium text-sm">19.1</td>
+<td class="px-4 py-5 text-center font-medium text-sm">30.8</td>
+</tr>
+<tr class="hover:bg-surface-container-high transition-colors">
+<td class="px-8 py-5 flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<span class="font-bold text-sm">BART-Large</span>
+</td>
+<td class="px-4 py-5 text-center font-medium text-sm">44.1</td>
+<td class="px-4 py-5 text-center font-medium text-sm">21.2</td>
+<td class="px-4 py-5 text-center font-medium text-sm">41.0</td>
+<td class="px-4 py-5 text-center font-medium text-sm">0.865</td>
+<td class="px-4 py-5 text-center font-medium text-sm">15.2</td>
+<td class="px-4 py-5 text-center font-medium text-sm">26.4</td>
+</tr>
+<tr class="hover:bg-surface-container-high transition-colors">
+<td class="px-8 py-5 flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<span class="font-bold text-sm">T5-11B</span>
+</td>
+<td class="px-4 py-5 text-center font-medium text-sm">42.8</td>
+<td class="px-4 py-5 text-center font-medium text-sm">20.5</td>
+<td class="px-4 py-5 text-center font-medium text-sm">39.8</td>
+<td class="px-4 py-5 text-center font-medium text-sm">0.821</td>
+<td class="px-4 py-5 text-center font-medium text-sm">14.8</td>
+<td class="px-4 py-5 text-center font-medium text-sm">25.1</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Context Footer -->
+<footer class="pt-8 flex justify-between items-center text-on-surface-variant border-t border-outline-variant/10">
+<div class="flex gap-6 text-[10px] font-bold uppercase tracking-widest">
+<a class="hover:text-primary transition-colors" href="#">Documentation</a>
+<a class="hover:text-primary transition-colors" href="#">API Reference</a>
+<a class="hover:text-primary transition-colors" href="#">Methodology</a>
+</div>
+<div class="text-[10px] font-medium opacity-50">
+                    © 2024 ContextFree-X Laboratory. Version 2.4.12
+                </div>
+</footer>
+</div>
+</main>
+<!-- Floating Action Button for Actions -->
+<div class="fixed bottom-8 right-8">
+<button class="bg-gradient-to-br from-primary to-primary-container text-on-primary-container p-4 rounded-full shadow-2xl flex items-center justify-center transition-transform active:scale-95 group">
+<span class="material-symbols-outlined text-2xl" data-icon="add">add</span>
+<span class="max-w-0 group-hover:max-w-xs group-hover:ml-3 overflow-hidden transition-all duration-300 whitespace-nowrap text-sm font-bold">New Evaluation</span>
+</button>
+</div>
+</body></html>

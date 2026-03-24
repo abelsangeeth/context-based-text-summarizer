@@ -5,33 +5,22 @@ import torch
 from summarizer.models import load_model, get_model_label
 from summarizer.pipeline import summarize
 from input_handlers.lang_detector import detect_language, SUPPORTED_LANGUAGES, TRANSLATION_MODELS
-from input_handlers.text_cleaner import deep_clean
+from input_handlers.cleaner import clean_text as deep_clean
 from evaluation.bert_scorer import compute_bertscore
 from evaluation.aggregator import evaluate_all
 from transformers import AutoTokenizer, T5ForConditionalGeneration, BartForConditionalGeneration
 
+from components.stitch_theme import apply_stitch_theme, page_header, sidebar_brand, sidebar_nav, sidebar_footer
+
 st.set_page_config(page_title="Multilingual — ContextFree-X", page_icon="🌍", layout="wide")
+apply_stitch_theme()
 
-st.markdown("""
-<style>
-    .block-container { padding-top: 2rem; max-width: 1200px; }
-    .lang-badge {
-        font-size: 1.4rem;
-        padding: 8px 16px;
-        background: rgba(100,100,100,0.08);
-        border-radius: 10px;
-        display: inline-block;
-    }
-    div[data-testid="metric-container"] {
-        background: rgba(100,100,100,0.08);
-        border-radius: 8px;
-        padding: 10px 14px;
-    }
-</style>
-""", unsafe_allow_html=True)
+with st.sidebar:
+    sidebar_brand()
+    sidebar_nav(active="multilingual")
+    sidebar_footer()
 
-st.title("🌍 Multilingual Summarization")
-st.caption("Auto-detect language, summarize with the best model, and translate to English.")
+page_header("Multilingual Summarization", "Auto-detect language, summarize with the best model, and translate to English.")
 
 
 @st.cache_resource(show_spinner=False)
@@ -70,10 +59,17 @@ input_text = st.text_area(
 
 # --- Language detection ---
 if input_text.strip() and len(input_text.split()) >= 5:
-    lang_code, lang_name, flag, rec_model = detect_language(input_text)
+    lang_result = detect_language(input_text)
+    lang_code = lang_result["code"]
+    lang_name = lang_result["name"]
+    flag = lang_result["flag"]
+    rec_model = lang_result["recommended_model"]
 
-    st.markdown(f'<div class="lang-badge">{flag} Detected: <strong>{lang_name}</strong> ({lang_code})</div>',
-                unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="cfx-lang-pill"><span class="cfx-lang-dot"></span>'
+        f'{flag} Detected: <strong>{lang_name}</strong> ({lang_code})</div>',
+        unsafe_allow_html=True,
+    )
     st.write("")
 
     # Manual override
@@ -89,7 +85,8 @@ if input_text.strip() and len(input_text.split()) >= 5:
 
     if override != lang_code:
         lang_code = override
-        lang_name, flag, rec_model = SUPPORTED_LANGUAGES[lang_code]
+        lang_name, flag, _ = SUPPORTED_LANGUAGES[lang_code]
+        rec_model = SUPPORTED_LANGUAGES[lang_code][2]
 
     # Disclaimer for Tamil and Hindi
     if lang_code in ("ta", "hi"):
@@ -121,24 +118,20 @@ if input_text.strip() and len(input_text.split()) >= 5:
         col_orig, col_en = st.columns(2)
 
         with col_orig:
-            st.markdown(f"#### {flag} {lang_name} Summary")
+            st.markdown(f'<div class="cfx-section-title">{flag} {lang_name} Summary</div>', unsafe_allow_html=True)
             st.markdown(
-                f'<div style="border-left: 4px solid #8B5CF6; padding: 14px 18px; '
-                f'background: rgba(100,100,100,0.04); border-radius: 0 8px 8px 0; '
-                f'line-height: 1.65; font-size: 0.93rem;">{summary}</div>',
+                f'<div class="cfx-output-card"><div class="cfx-summary-text">{summary}</div></div>',
                 unsafe_allow_html=True,
             )
             st.caption(f"{len(summary.split())} words")
 
         with col_en:
             if lang_code != "en":
-                st.markdown("#### 🇬🇧 English Translation")
+                st.markdown('<div class="cfx-section-title">🇬🇧 English Translation</div>', unsafe_allow_html=True)
                 with st.spinner("Translating to English..."):
                     translated = translate_to_english(summary, lang_code)
                 st.markdown(
-                    f'<div style="border-left: 4px solid #3B82F6; padding: 14px 18px; '
-                    f'background: rgba(100,100,100,0.04); border-radius: 0 8px 8px 0; '
-                    f'line-height: 1.65; font-size: 0.93rem;">{translated}</div>',
+                    f'<div class="cfx-output-card"><div class="cfx-summary-text">{translated}</div></div>',
                     unsafe_allow_html=True,
                 )
                 st.caption(f"{len(translated.split())} words")

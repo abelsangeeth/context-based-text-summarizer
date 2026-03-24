@@ -3,7 +3,7 @@
 import streamlit as st
 from summarizer.models import list_models, get_model_label
 from summarizer.pipeline import summarize
-from input_handlers.text_cleaner import deep_clean
+from input_handlers.cleaner import clean_text as deep_clean
 from evaluation.aggregator import (
     evaluate_all, composite_score, rank_models,
     generate_recommendation_text, abstractiveness_score, compression_ratio,
@@ -11,21 +11,17 @@ from evaluation.aggregator import (
 from components.radar_chart import render_radar_chart, render_ranking_bar, render_scores_table
 from components.export_utils import export_csv_button, export_json_button, scores_to_dataframe
 
+from components.stitch_theme import apply_stitch_theme, page_header, sidebar_brand, sidebar_nav, sidebar_footer
+
 st.set_page_config(page_title="Metrics Dashboard — ContextFree-X", page_icon="📊", layout="wide")
+apply_stitch_theme()
 
-st.markdown("""
-<style>
-    .block-container { padding-top: 2rem; max-width: 1400px; }
-    div[data-testid="metric-container"] {
-        background: rgba(100,100,100,0.08);
-        border-radius: 8px;
-        padding: 10px 14px;
-    }
-</style>
-""", unsafe_allow_html=True)
+with st.sidebar:
+    sidebar_brand()
+    sidebar_nav(active="dashboard")
+    sidebar_footer()
 
-st.title("📊 Metrics Dashboard")
-st.caption("Comprehensive evaluation with ROUGE, BLEU, BERTScore, METEOR, and novel metrics.")
+page_header("Metrics Dashboard", "Comprehensive evaluation with ROUGE, BLEU, BERTScore, METEOR, and novel metrics.")
 
 # --- Input ---
 input_text = st.text_area("Input text", height=180,

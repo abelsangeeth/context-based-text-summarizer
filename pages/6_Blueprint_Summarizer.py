@@ -16,21 +16,26 @@ from vision_summarizer.blueprint_metrics import (extraction_confidence,
                                                   dimension_completeness)
 from summarizer.pipeline import summarize
 
-st.set_page_config(page_title="Blueprint Summarizer",
-                   page_icon="\U0001f3e0", layout="wide")
-st.title("\U0001f3e0 Blueprint Summarizer")
-st.caption("Upload any floor plan \u2014 JPG, PNG, PDF, DXF, or DWG")
+from components.stitch_theme import apply_stitch_theme, page_header, sidebar_brand, sidebar_nav, sidebar_footer
 
-# ── Sidebar controls ────────────────────────────────────────
+st.set_page_config(page_title="Blueprint Summarizer", page_icon="🏠", layout="wide")
+apply_stitch_theme()
+
 with st.sidebar:
-    st.header("\u2699\ufe0f Settings")
+    sidebar_brand()
+    sidebar_nav(active="blueprint")
+    st.divider()
+    st.markdown('<div class="cfx-section-title" style="padding:0 8px;">Settings</div>', unsafe_allow_html=True)
     method = st.radio(
         "Extraction Engine",
         ["auto", "claude", "llava", "ocr"],
-        help="Auto tries Claude first, then LLaVA, then OCR"
+        help="Auto tries Claude first, then LLaVA, then OCR",
     )
     unit = st.radio("Display Units", ["sq ft", "sq m"])
     show_enhanced = st.checkbox("Show preprocessed image", value=True)
+    sidebar_footer()
+
+page_header("Blueprint Summarizer", "Upload any floor plan — JPG, PNG, PDF, DXF, or DWG")
 
 # ── File upload ─────────────────────────────────────────────
 uploaded = st.file_uploader(

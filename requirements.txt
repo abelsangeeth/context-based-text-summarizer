@@ -7,13 +7,25 @@ bert-score
 streamlit
 matplotlib
 plotly
-pandas
+pandas>=2.0.0
 pyyaml
-pdfplumber
-trafilatura
-langdetect
 rouge-score
 lxml_html_clean
+
+# ── Input Handlers ─────────────────────────────────────────
+pdfplumber>=0.9.0
+trafilatura>=1.6.0
+newspaper3k>=0.2.8
+beautifulsoup4>=4.12.0
+requests>=2.31.0
+youtube-transcript-api>=0.6.1
+openai-whisper>=20231117
+librosa>=0.10.0
+arxiv>=2.0.0
+langdetect>=1.0.9
+lxml>=4.9.0
+
+# ── Vision Summarizer ─────────────────────────────────────
 PyMuPDF>=1.23.0
 ezdxf>=1.1.0
 opencv-python-headless>=4.8.0
