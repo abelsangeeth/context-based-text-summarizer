@@ -1,4 +1,4 @@
-"""Page 1 — Summarize: Input text, PDF, URL, YouTube, or arXiv and get a summary."""
+"""Page 1 — Summarize: Input text, PDF, URL, YouTube, arXiv, or image and get a summary."""
 
 import streamlit as st
 from summarizer.models import list_models, get_model_label, load_model
@@ -7,9 +7,11 @@ from input_handlers.pdf_handler import extract_pdf
 from input_handlers.url_handler import scrape_url
 from input_handlers.youtube_handler import extract_youtube, is_valid_youtube_url
 from input_handlers.arxiv_handler import fetch_arxiv
+from input_handlers.image_handler import describe_image
 from input_handlers.cleaner import clean_text
 from evaluation.aggregator import evaluate_all, abstractiveness_score, compression_ratio
 from components.stitch_theme import apply_stitch_theme, page_header, sidebar_brand, sidebar_nav, sidebar_footer
+from app_history import save_history
 
 st.set_page_config(page_title="Summarize — ContextFree-X", page_icon="✍️", layout="wide")
 apply_stitch_theme()
@@ -21,12 +23,12 @@ with st.sidebar:
 
 page_header(
     "Summarize",
-    "Paste text, upload a PDF, enter a URL, paste a YouTube link, or fetch an arXiv paper — get a high-quality summary instantly.",
+    "Paste text, upload a PDF, enter a URL, paste a YouTube link, fetch an arXiv paper, or upload an image — get a high-quality summary instantly.",
 )
 
 # --- Input method ---
-tab_text, tab_pdf, tab_url, tab_yt, tab_arxiv = st.tabs(
-    ["📝 Text", "📄 PDF", "🔗 URL", "🎬 YouTube", "📚 arXiv"]
+tab_text, tab_pdf, tab_url, tab_yt, tab_arxiv, tab_img = st.tabs(
+    ["📝 Text", "📄 PDF", "🔗 URL", "🎬 YouTube", "📚 arXiv", "🖼️ Image"]
 )
 
 input_text = ""
@@ -199,62 +201,159 @@ with tab_arxiv:
             with st.expander("Preview text", expanded=False):
                 st.text(input_text[:3000] + ("..." if len(input_text) > 3000 else ""))
 
+# ══════════════════════════════════════════════════════════════════════
+#  TAB 6 — Image summarization (BLIP + DETR)
+# ══════════════════════════════════════════════════════════════════════
+with tab_img:
+    img_file = st.file_uploader(
+        "Upload an image",
+        type=["jpg", "jpeg", "png", "webp", "bmp"],
+        key="img_input",
+    )
+    if img_file:
+        # Show image preview
+        st.image(img_file, caption=img_file.name, use_container_width=True)
+
+        with st.spinner("Analyzing image with AI (first run downloads models ~2 GB)..."):
+            try:
+                img_result = describe_image(img_file)
+            except ValueError as e:
+                img_result = None
+                st.error(str(e))
+
+        if img_result:
+            # Caption card
+            st.markdown(
+                f"""<div class="cfx-card" style="margin-bottom: 16px;">
+                    <div class="cfx-metric-label">AI Caption</div>
+                    <div style="font-family:'Inter',sans-serif;font-size:1.05rem;
+                                color:#191b23;line-height:1.6;margin-top:6px;">
+                        {img_result['caption']}
+                    </div>
+                </div>""",
+                unsafe_allow_html=True,
+            )
+
+            # Object detection metrics
+            obj_count = img_result["object_count"]
+            unique_labels = len(img_result["objects"])
+
+            mc1, mc2 = st.columns(2)
+            mc1.metric("Objects Detected", obj_count)
+            mc2.metric("Unique Labels", unique_labels)
+
+            # Tags for detected objects
+            if img_result["objects"]:
+                tags_html = ""
+                for obj in img_result["objects"]:
+                    count_str = f" ×{obj['count']}" if obj['count'] > 1 else ""
+                    conf_pct = f"{obj['max_confidence']:.0%}"
+                    tags_html += (
+                        f'<span class="cfx-tag cfx-tag-primary" style="margin:3px;">'
+                        f'{obj["label"]}{count_str}'
+                        f'<span style="opacity:0.6;font-size:10px;margin-left:4px;">{conf_pct}</span>'
+                        f'</span>'
+                    )
+                st.markdown(
+                    f'<div style="margin:12px 0;">{tags_html}</div>',
+                    unsafe_allow_html=True,
+                )
+
+            # Set the summary text as input for optional text summarization
+            input_text = img_result["summary_text"]
+
+            with st.expander("Full description text", expanded=False):
+                st.text(input_text)
+
 
 # ══════════════════════════════════════════════════════════════════════
-#  MODEL SELECTION + GENERATION  (shared across all tabs)
+#  STRUCTURED LONG-FORM GENERATION  (shared across all tabs)
 # ══════════════════════════════════════════════════════════════════════
 st.divider()
 
-col_model, col_btn = st.columns([3, 1])
+from summarizer.section_detector import detect_sections
+from summarizer.subheading_generator import generate_all_subheadings
+from summarizer.longform_builder import build_longform_summary
+from components.longform_renderer import (render_longform_summary,
+                                          render_section_controls,
+                                          export_as_markdown,
+                                          export_as_docx)
 
-available = [m for m in list_models() if m != "mt5"]  # mt5 on multilingual page
-
-with col_model:
-    model_key = st.selectbox(
+# Sidebar controls
+with st.sidebar:
+    st.markdown("### Rendering Controls")
+    length_mode = st.radio(
+        "Summary length",
+        ["detailed", "standard", "brief"],
+        index=0,
+        help="Detailed = long paragraphs per section"
+    )
+    available = [m for m in list_models() if m != "mt5"]
+    model_name = st.selectbox(
         "Model",
         available,
-        format_func=get_model_label,
+        format_func=get_model_label
     )
+    show_wc = st.checkbox("Show word counts", value=True)
 
-# Determine if long-document mode needed
 word_count = len(input_text.split()) if input_text.strip() else 0
-
-with col_btn:
-    st.write("")  # vertical align hack
-    st.write("")
-    generate = st.button("Generate Summary", type="primary", use_container_width=True,
-                         disabled=word_count < 10)
 
 if word_count > 0:
     st.caption(f"Input: **{word_count}** words · **{len(input_text)}** characters")
+    
+    if st.button("Generate Structured Summary", type="primary", use_container_width=True, disabled=word_count < 10):
+        # Reset any past generation
+        st.session_state.longform_summary = None
+        
+        with st.spinner("Detecting sections..."):
+            sections = detect_sections(input_text, source_type="auto")
+            st.toast(f"✅ {len(sections)} sections detected")
 
-# --- Generation ---
-if generate and input_text.strip():
-    cleaned = clean_text(input_text)
+        with st.spinner("Generating subheadings..."):
+            subheadings = generate_all_subheadings(sections, model_name=model_name)
 
-    with st.spinner(f"Generating summary with {get_model_label(model_key)}..."):
-        if word_count > 500:
-            st.info(f"Long document detected ({word_count} words). Using iterative chunk-and-merge strategy.")
-            summary = summarize_long(cleaned, model_key)
-        else:
-            summary = summarize(cleaned, model_key)
+        with st.spinner(f"Summarizing {len(sections)} sections..."):
+            longform = build_longform_summary(
+                sections=sections,
+                subheadings=subheadings,
+                model_name=model_name,
+                length_mode=length_mode
+            )
+            # Retain history functionality
+            save_history(input_text, longform["sections"][0]["summary_paragraph"][:300] + "...", model_name)
+            
+            # Save into session state
+            st.session_state.longform_summary = longform
 
-    st.markdown('<div class="cfx-section-title">Summary</div>', unsafe_allow_html=True)
-    st.markdown(
-        f'<div class="cfx-output-card"><div class="cfx-summary-text">{summary}</div></div>',
-        unsafe_allow_html=True,
-    )
+# Render if available in state
+if "longform_summary" in st.session_state and st.session_state.longform_summary is not None:
+    lf = st.session_state.longform_summary
+    
+    st.markdown('<div class="cfx-section-title">Structured Long-Form Summary</div>', unsafe_allow_html=True)
+    
+    selected_sec = render_section_controls(lf)
+    
+    # Styled card background 
+    st.markdown('<div class="cfx-output-card" style="padding: 24px; background: #ffffff;">', unsafe_allow_html=True)
+    render_longform_summary(lf, selected_sec=selected_sec, show_word_count=show_wc)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    s_words = len(summary.split())
-    m1, m2, m3 = st.columns(3)
-    m1.metric("Words", s_words)
-    m2.metric("Compression", f"{compression_ratio(summary, cleaned):.2%}")
-    m3.metric("Abstractiveness", f"{abstractiveness_score(summary, cleaned):.2%}")
-
-    # Quick evaluation if user wants it
-    with st.expander("Run evaluation metrics", expanded=False):
-        if st.button("Compute metrics", key="eval_btn"):
-            with st.spinner("Computing ROUGE, BLEU, BERTScore, METEOR..."):
-                scores = evaluate_all([summary], [cleaned])
-            for metric, val in scores.items():
-                st.metric(metric, f"{val:.4f}")
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        st.download_button(
+            "⬇️ Download Markdown",
+            data=export_as_markdown(lf),
+            file_name="structured_summary.md",
+            mime="text/markdown",
+            use_container_width=True
+        )
+    with col2:
+        st.download_button(
+            "⬇️ Download Word Doc",
+            data=export_as_docx(lf),
+            file_name="structured_summary.docx",
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            use_container_width=True
+        )

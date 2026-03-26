@@ -38,3 +38,4 @@ from input_handlers.audio_handler import transcribe_audio
 from input_handlers.arxiv_handler import fetch_arxiv, search_arxiv
 from input_handlers.blueprint_handler import extract_blueprint
 from input_handlers.batch_handler import extract_batch, validate_batch
+from input_handlers.image_handler import describe_image

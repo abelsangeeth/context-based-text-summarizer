@@ -16,7 +16,6 @@ def compute_bertscore(predictions: list[str],
         predictions,
         references,
         lang=lang,
-        rescale_with_baseline=True,
         device=device,
     )
     return {

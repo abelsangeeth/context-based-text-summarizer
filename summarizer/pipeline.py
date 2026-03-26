@@ -6,7 +6,7 @@ from summarizer.preprocessing import prepare_input, chunk_text, clean_text
 from summarizer.postprocessing import postprocess_summary
 
 
-def summarize(text: str, model_key: str) -> str:
+def summarize(text: str, model_key: str, **kwargs) -> str:
     """
     Generate a summary using the specified model.
     Handles input preparation, inference, and postprocessing.
@@ -32,17 +32,22 @@ def summarize(text: str, model_key: str) -> str:
         min_len = cfg["min_output"]
     else:
         min_len = min(30, cfg["max_output"] - 10)
+        
+    gen_kwargs = {
+        "max_length": cfg["max_output"],
+        "min_length": min_len,
+        "num_beams": 4,
+        "early_stopping": True,
+        "no_repeat_ngram_size": 3,
+        "length_penalty": 2.0,
+    }
+    gen_kwargs.update(kwargs)
 
     with torch.no_grad():
         output_ids = model.generate(
             inputs["input_ids"],
             attention_mask=inputs.get("attention_mask"),
-            max_length=cfg["max_output"],
-            min_length=min_len,
-            num_beams=4,
-            early_stopping=True,
-            no_repeat_ngram_size=3,
-            length_penalty=2.0,
+            **gen_kwargs
         )
 
     raw = tokenizer.decode(output_ids[0], skip_special_tokens=True)

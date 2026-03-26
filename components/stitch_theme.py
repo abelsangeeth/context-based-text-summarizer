@@ -866,6 +866,7 @@ def sidebar_nav(active: str) -> None:
         ("batch",       "layers",      "📋",  "Batch Evaluate",        "pages/4_Batch_Evaluate.py"),
         ("multilingual","language",    "🌐",  "Multilingual",          "pages/5_Multilingual.py"),
         ("blueprint",   "architecture","🏛️", "Blueprint Summarizer",  "pages/6_Blueprint_Summarizer.py"),
+        ("history",     "history",     "🕒",  "History",               "pages/7_History.py"),
     ]
 
     for key, icon_name, emoji, label, path in pages:

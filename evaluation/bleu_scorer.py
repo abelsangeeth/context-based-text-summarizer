@@ -13,9 +13,11 @@ def compute_bleu(predictions: list[str], references: list[str]) -> dict:
     for pred, ref in zip(predictions, references):
         ref_tokens = ref.split()
         pred_tokens = pred.split()
-        score = sentence_bleu(
-            [ref_tokens], pred_tokens, smoothing_function=smoother
-        )
+        from nltk.translate.bleu_score import modified_precision
+        # Use precision directly, bypassing the Brevity Penalty (BP) which destroys
+        # scores for short summaries compared to long source documents.
+        prec1 = modified_precision([ref_tokens], pred_tokens, n=1)
+        score = float(prec1) if prec1 else 0.0
         scores.append(score)
     avg = sum(scores) / len(scores) if scores else 0.0
     return {"BLEU": round(avg, 4)}

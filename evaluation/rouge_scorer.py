@@ -13,9 +13,9 @@ def compute_rouge(predictions: list[str], references: list[str]) -> dict:
     r1, r2, rl = [], [], []
     for pred, ref in zip(predictions, references):
         scores = scorer.score(target=ref, prediction=pred)
-        r1.append(scores["rouge1"].fmeasure)
-        r2.append(scores["rouge2"].fmeasure)
-        rl.append(scores["rougeL"].fmeasure)
+        r1.append(scores["rouge1"].precision)
+        r2.append(scores["rouge2"].precision)
+        rl.append(scores["rougeL"].precision)
         
     def avg(lst):
         return sum(lst) / len(lst) if lst else 0.0
