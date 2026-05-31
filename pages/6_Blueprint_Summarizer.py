@@ -71,20 +71,20 @@ selected_img = pages[floor_idx]
 col_orig, col_proc = st.columns(2)
 with col_orig:
     st.subheader("Original")
-    st.image(selected_img, use_container_width=True)
+    st.image(selected_img, width='stretch')
 
 with col_proc:
     if show_enhanced:
         st.subheader("Enhanced for AI Analysis")
         with st.spinner("Enhancing image..."):
             processed = preprocess_blueprint(selected_img)
-        st.image(processed, use_container_width=True)
+        st.image(processed, width='stretch')
     else:
         processed = preprocess_blueprint(selected_img)
 
 # ── Analyze button ──────────────────────────────────────────
 if st.button("\U0001f50d Analyze Blueprint", type="primary",
-             use_container_width=True):
+             width='stretch'):
 
     # Step 1: Extract
     with st.spinner(f"Extracting room data "
@@ -98,6 +98,15 @@ if st.button("\U0001f50d Analyze Blueprint", type="primary",
 
     # Step 1.5: Validate and clean
     raw_data = validate_and_clean(raw_data)
+
+    # Warn the user if LLaVA returned unparseable JSON
+    if raw_data.get("_parse_error"):
+        st.warning(
+            "⚠️ LLaVA returned a response that could not be fully parsed as JSON. "
+            "The blueprint structure could not be extracted. "
+            "Try switching to **OCR** engine or uploading a clearer image.",
+            icon="🤖"
+        )
 
     # Step 2: Calculate areas
     data = calculate_all_areas(raw_data)
@@ -161,7 +170,7 @@ if st.button("\U0001f50d Analyze Blueprint", type="primary",
                     subset=[numeric_area_col], color="#fff3cd"
                 )
 
-        st.dataframe(styled, use_container_width=True)
+        st.dataframe(styled, width='stretch')
     else:
         st.warning("No rooms detected. Try a different engine.")
 

@@ -1,4 +1,4 @@
-"""ContextFree-X — Research-Grade Multi-Domain Text Summarizer."""
+"""COMPASS — Comparative Multi-model Pipeline with Adaptive Semantic Scoring."""
 
 import streamlit as st
 from components.stitch_theme import (
@@ -6,8 +6,8 @@ from components.stitch_theme import (
 )
 
 st.set_page_config(
-    page_title="ContextFree-X",
-    page_icon="⚡",
+    page_title="COMPASS — Comparative Multi-model Pipeline with Adaptive Semantic Scoring",
+    page_icon="⧡",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -25,11 +25,12 @@ st.markdown(
     """
     <div style="margin-bottom: 6px;">
         <div class="cfx-page-title">
-            Context<span class="cfx-gradient-text">Free-X</span>
+            <span class="cfx-gradient-text">COMPASS</span>
         </div>
     </div>
     <div class="cfx-page-subtitle">
-        A research-grade, multi-domain text summarizer with 5 transformer models,
+        Comparative Multi-model Pipeline with Adaptive Semantic Scoring —
+        a research-grade, multi-domain text summarizer with 5 transformer models,
         6 evaluation metrics, multilingual support, and research paper analysis —
         all running locally with full transparency.
     </div>
@@ -75,7 +76,7 @@ st.write("")
 
 # --- Comparison table ---
 st.markdown(
-    '<div class="cfx-section-title">How ContextFree-X Compares</div>',
+    '<div class="cfx-section-title">How COMPASS Compares</div>',
     unsafe_allow_html=True,
 )
 st.markdown(
@@ -104,7 +105,7 @@ st.markdown(
     .vs-table tr:hover td { background: rgba(0,88,190,0.03); }
     </style>
     <table class="vs-table">
-    <tr><th>Capability</th><th>ChatGPT / Gemini</th><th>ContextFree-X</th></tr>
+    <tr><th>Capability</th><th>ChatGPT / Gemini</th><th>COMPASS</th></tr>
     <tr><td>Evaluation scores</td><td>❌ None</td><td>✅ ROUGE + BLEU + BERTScore + METEOR</td></tr>
     <tr><td>Semantic scoring</td><td>❌</td><td>✅ BERTScore F1 with baseline rescaling</td></tr>
     <tr><td>Model comparison</td><td>❌ Single model</td><td>✅ 5 models simultaneously</td></tr>

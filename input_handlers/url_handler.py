@@ -1,5 +1,5 @@
 """
-ContextFree-X — URL / Web Scraper Handler
+Vision-Augmented LLM Pipeline for Long-Form Document Summarization — URL / Web Scraper Handler
 ══════════════════════════════════════════
 Three-tier extraction:
   Tier 1 → trafilatura  (precision-first)

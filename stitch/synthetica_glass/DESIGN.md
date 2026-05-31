@@ -1,4 +1,4 @@
-# Design System Specification: ContextFree-X
+# Design System Specification: Vision-Augmented LLM Pipeline for Long-Form Document Summarization
 
 ## 1. Overview & Creative North Star: "The Architectural Curator"
 This design system moves beyond the "SaaS template" aesthetic to establish a visual language of high-trust, research-grade precision. Our Creative North Star is **The Architectural Curator**. 
@@ -21,7 +21,7 @@ Treat the UI as a series of physical layers. Use the surface-container tiers to 
 - **Floating Overlays:** `surface-container-lowest` (#ffffff) with backdrop blur.
 
 ### Signature Textures & Glassmorphism
-- **The AI Insight Glow:** For primary summaries or "ContextFree-X" highlights, use a subtle linear gradient: `primary` (#0058be) to `primary-container` (#2170e4) at a 135-degree angle.
+- **The AI Insight Glow:** For primary summaries or "Vision-Augmented LLM Pipeline for Long-Form Document Summarization" highlights, use a subtle linear gradient: `primary` (#0058be) to `primary-container` (#2170e4) at a 135-degree angle.
 - **Glassmorphism:** Floating navigation bars or modal overlays must use semi-transparent `surface_container_lowest` (80% opacity) with a `12px` backdrop-blur. This softens the edges and makes the platform feel "airy" and integrated.
 
 ---

@@ -12,7 +12,7 @@ from transformers import AutoTokenizer, T5ForConditionalGeneration, BartForCondi
 
 from components.stitch_theme import apply_stitch_theme, page_header, sidebar_brand, sidebar_nav, sidebar_footer
 
-st.set_page_config(page_title="Multilingual — ContextFree-X", page_icon="🌍", layout="wide")
+st.set_page_config(page_title="Multilingual — COMPASS", page_icon="🌍", layout="wide")
 apply_stitch_theme()
 
 with st.sidebar:

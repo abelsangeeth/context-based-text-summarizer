@@ -25,13 +25,17 @@ def summarize(text: str, model_key: str, **kwargs) -> str:
     ).to(device)
 
     # Scale min_length based on input length — longer input = longer summary
+    # Scale min_length based on input length — longer input = longer summary
     input_word_count = len(text.split())
+    
+    # Strictly bound min_len to avoid forcing hallucination on low-density chunks
     if input_word_count > 300:
-        min_len = min(cfg["min_output"] * 2, cfg["max_output"] - 20)
+        min_len = min(60, min(cfg["min_output"] * 2, cfg["max_output"] - 20))
     elif input_word_count > 100:
-        min_len = cfg["min_output"]
+        min_len = min(50, min(cfg["min_output"], int(input_word_count * 0.3)))
     else:
-        min_len = min(30, cfg["max_output"] - 10)
+        # Prevent forcing long hallucinated outputs on very short inputs
+        min_len = min(20, int(input_word_count * 0.2))
         
     gen_kwargs = {
         "max_length": cfg["max_output"],

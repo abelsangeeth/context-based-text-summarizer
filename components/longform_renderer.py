@@ -3,65 +3,64 @@ import io
 
 def render_longform_summary(longform: dict, selected_sec: str = "-- Document Overview --", show_word_count: bool = True, show_reading_time: bool = True):
     from summarizer.longform_builder import estimate_reading_time
-    
+
+    sections = longform["sections"]
+    n_total = len(sections)
+
     html_sections = ""
-    for sec in longform["sections"]:
-        if selected_sec != "-- Document Overview --" and sec["subheading"] != selected_sec:
+    for idx, sec in enumerate(sections, start=1):
+        para_label = f"Para {idx}"
+        if selected_sec != "-- Document Overview --" and para_label != selected_sec:
             continue
-            
+
         badge = ""
         if show_word_count:
             badge = f'<span style="font-size: 11px; color: #888; margin-top: 4px; display: inline-block;">{sec["word_count"]} words</span>'
-            
+
         sec_html = f"""<div style="margin-bottom: 28px;">
-<h3 style="color: #000000 !important; font-weight: 700; font-size: 18px; margin-bottom: 8px; border-bottom: 2px solid #000000; padding-bottom: 4px;">{sec['subheading']}</h3>
 <p style="font-size: 15px; line-height: 1.8; color: var(--text-color); margin: 0;">{sec['summary_paragraph']}</p>
 {badge}
 </div>"""
         html_sections += sec_html
-        
+
     header = ""
     if show_reading_time and selected_sec == "-- Document Overview --":
         header = f"""<p style="font-size: 12px; color: #888; margin-bottom: 20px; border-left: 3px solid #000; padding-left: 10px;">
-{longform['total_word_count']} words &middot; {estimate_reading_time(longform['total_word_count'])} &middot; {len(longform['sections'])} sections &middot; summarized with {longform['model_used']}
+{longform['total_word_count']} words &middot; {estimate_reading_time(longform['total_word_count'])} &middot; {n_total} paragraphs &middot; summarized with {longform['model_used']}
 </p>"""
-        
+
     wrapper = f"""<div style="max-width: 860px; padding: 8px 0;">
 {header}
 {html_sections}
 </div>"""
-    
+
     st.markdown(wrapper, unsafe_allow_html=True)
 
 def render_section_controls(longform: dict) -> str:
-    # A tiny jump nav for UX
-    headings = [s["subheading"] for s in longform["sections"]]
-    jump = st.selectbox("Jump to section", ["-- Document Overview --"] + headings)
+    # Jump nav using paragraph numbers instead of AI subheadings
+    para_labels = [f"Para {i}" for i in range(1, len(longform["sections"]) + 1)]
+    jump = st.selectbox("Jump to paragraph", ["-- Document Overview --"] + para_labels)
     return jump
 
 def export_as_markdown(longform: dict) -> str:
     md = ""
     for sec in longform["sections"]:
-        md += f"## {sec['subheading']}\n\n{sec['summary_paragraph']}\n\n"
+        md += f"{sec['summary_paragraph']}\n\n"
     return md
 
 def export_as_docx(longform: dict) -> bytes:
     try:
         from docx import Document
-        from docx.shared import RGBColor
     except ImportError:
         # Fallback if python-docx not installed
         return b"Error: python-docx not installed"
-        
+
+    import re
     doc = Document()
     for sec in longform["sections"]:
-        heading = doc.add_heading(sec['subheading'], level=2)
-        for run in heading.runs:
-            run.font.color.rgb = RGBColor(0, 0, 0)
-            run.bold = True
-            
-        doc.add_paragraph(sec['summary_paragraph'])
-        
+        # python-docx requires strict XML-compatible strings; filter out control chars like NULL bytes
+        clean_text = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]', '', str(sec.get('summary_paragraph', '')))
+        doc.add_paragraph(clean_text)
     bio = io.BytesIO()
     doc.save(bio)
     return bio.getvalue()

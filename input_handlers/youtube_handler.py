@@ -1,5 +1,5 @@
 """
-ContextFree-X — YouTube Transcript Handler
+Vision-Augmented LLM Pipeline for Long-Form Document Summarization — YouTube Transcript Handler
 ═══════════════════════════════════════════
 Extracts transcripts from YouTube videos via the
 ``youtube-transcript-api`` package (no API key needed).

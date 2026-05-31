@@ -13,7 +13,7 @@ from evaluation.aggregator import evaluate_all, abstractiveness_score, compressi
 from components.stitch_theme import apply_stitch_theme, page_header, sidebar_brand, sidebar_nav, sidebar_footer
 from app_history import save_history
 
-st.set_page_config(page_title="Summarize — ContextFree-X", page_icon="✍️", layout="wide")
+st.set_page_config(page_title="Summarize — COMPASS", page_icon="✍️", layout="wide")
 apply_stitch_theme()
 
 with st.sidebar:
@@ -212,7 +212,7 @@ with tab_img:
     )
     if img_file:
         # Show image preview
-        st.image(img_file, caption=img_file.name, use_container_width=True)
+        st.image(img_file, caption=img_file.name, width='stretch')
 
         with st.spinner("Analyzing image with AI (first run downloads models ~2 GB)..."):
             try:
@@ -271,9 +271,10 @@ with tab_img:
 # ══════════════════════════════════════════════════════════════════════
 st.divider()
 
-from summarizer.section_detector import detect_sections
+from summarizer.section_detector import detect_sections, merge_short_sections
 from summarizer.subheading_generator import generate_all_subheadings
 from summarizer.longform_builder import build_longform_summary
+from input_handlers.cleaner import clean_text as deep_clean
 from components.longform_renderer import (render_longform_summary,
                                           render_section_controls,
                                           export_as_markdown,
@@ -296,23 +297,65 @@ with st.sidebar:
     )
     show_wc = st.checkbox("Show word counts", value=True)
 
+# ── Detect model / length_mode changes → invalidate stale summary ──────────────
+_prev_model  = st.session_state.get("_last_model", None)
+_prev_mode   = st.session_state.get("_last_length_mode", None)
+
+if _prev_model is not None and (_prev_model != model_name or _prev_mode != length_mode):
+    # Settings changed since last generation — wipe cached result
+    st.session_state.longform_summary = None
+
+# Always persist current selections so the next run can compare
+st.session_state["_last_model"]       = model_name
+st.session_state["_last_length_mode"] = length_mode
+
 word_count = len(input_text.split()) if input_text.strip() else 0
 
 if word_count > 0:
     st.caption(f"Input: **{word_count}** words · **{len(input_text)}** characters")
-    
-    if st.button("Generate Structured Summary", type="primary", use_container_width=True, disabled=word_count < 10):
+
+    # Warn when model/mode changed and old summary was wiped
+    if (
+        word_count >= 10
+        and st.session_state.get("longform_summary") is None
+        and _prev_model is not None
+    ):
+        st.warning(
+            f"⚠️ Settings changed to **{get_model_label(model_name)} / {length_mode}**. "
+            "Click **Generate Structured Summary** to regenerate.",
+            icon="🔄",
+        )
+
+    if st.button("Generate Structured Summary", type="primary", width='stretch', disabled=word_count < 10):
         # Reset any past generation
         st.session_state.longform_summary = None
-        
+
+        # Detect sections on ORIGINAL text (preserves \n\n paragraph breaks)
+        # Then clean each section's text individually.
         with st.spinner("Detecting sections..."):
             sections = detect_sections(input_text, source_type="auto")
+
+            # Deep-clean each section's raw text individually
+            for sec in sections:
+                sec["raw_text"] = deep_clean(sec["raw_text"])
+                sec["word_count"] = len(sec["raw_text"].split())
+
+            # Drop empty sections that became blank after cleaning
+            sections = [s for s in sections if s["word_count"] >= 10]
+
+            # Fix 3.3 — Merge sections under 80 words into their neighbour
+            sections = merge_short_sections(sections, min_words=80)
+
             st.toast(f"✅ {len(sections)} sections detected")
 
         with st.spinner("Generating subheadings..."):
             subheadings = generate_all_subheadings(sections, model_name=model_name)
 
-        with st.spinner(f"Summarizing {len(sections)} sections..."):
+        # Pre-load model explicitly so user sees it loading (cache handles reuse)
+        with st.spinner(f"Loading **{get_model_label(model_name)}** model..."):
+            load_model(model_name)
+
+        with st.spinner(f"Summarizing {len(sections)} sections with **{get_model_label(model_name)}**..."):
             longform = build_longform_summary(
                 sections=sections,
                 subheadings=subheadings,
@@ -321,19 +364,27 @@ if word_count > 0:
             )
             # Retain history functionality
             save_history(input_text, longform["sections"][0]["summary_paragraph"][:300] + "...", model_name)
-            
+
             # Save into session state
             st.session_state.longform_summary = longform
 
 # Render if available in state
 if "longform_summary" in st.session_state and st.session_state.longform_summary is not None:
     lf = st.session_state.longform_summary
-    
+
     st.markdown('<div class="cfx-section-title">Structured Long-Form Summary</div>', unsafe_allow_html=True)
-    
+
+    # Model + mode badge so the user can always see what produced this summary
+    _used_model = get_model_label(lf.get("model_used", ""))
+    _used_mode  = lf.get("length_mode", "")
+    _used_wc    = lf.get("total_word_count", 0)
+    st.caption(
+        f"🤖 **{_used_model}** · 📏 {_used_mode.capitalize()} · 📝 {_used_wc} words output"
+    )
+
     selected_sec = render_section_controls(lf)
-    
-    # Styled card background 
+
+    # Styled card background
     st.markdown('<div class="cfx-output-card" style="padding: 24px; background: #ffffff;">', unsafe_allow_html=True)
     render_longform_summary(lf, selected_sec=selected_sec, show_word_count=show_wc)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -347,7 +398,7 @@ if "longform_summary" in st.session_state and st.session_state.longform_summary 
             data=export_as_markdown(lf),
             file_name="structured_summary.md",
             mime="text/markdown",
-            use_container_width=True
+            width='stretch'
         )
     with col2:
         st.download_button(
@@ -355,5 +406,5 @@ if "longform_summary" in st.session_state and st.session_state.longform_summary 
             data=export_as_docx(lf),
             file_name="structured_summary.docx",
             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            use_container_width=True
+            width='stretch'
         )

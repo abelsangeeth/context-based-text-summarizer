@@ -6,6 +6,7 @@ Tier 3: pytesseract OCR (text-only fallback)
 """
 
 import os
+os.environ["ANTHROPIC_API_KEY"] = "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"
 import io
 import base64
 import json
@@ -13,15 +14,20 @@ import time
 import re
 from PIL import Image
 
-
 # ── Shared prompt ───────────────────────────────────────────
 EXTRACTION_PROMPT = """
 You are an expert architectural drawing analyst.
-Analyze this house blueprint image carefully.
+Analyze this house blueprint image carefully and extract the real data you see.
 
-Extract ALL visible information and return ONLY this exact JSON structure
-(no markdown, no explanation, just raw JSON):
+Return ONLY a single valid JSON object — no markdown, no explanation, no code fences.
 
+CRITICAL RULES:
+- NEVER output 0 or 0.0 as a placeholder. If a value is unknown, use null.
+- NEVER copy the example field names/values — replace them with what you actually see.
+- DO NOT add any text before or after the JSON.
+- DO NOT use angle-bracket placeholders like <Room Name>; write the actual name.
+
+JSON format (fill in real values from the image):
 {
   "floors": [
     {
@@ -30,33 +36,34 @@ Extract ALL visible information and return ONLY this exact JSON structure
       "rooms": [
         {
           "name": "Living Room",
-          "width_ft": 14.0,
-          "length_ft": 18.0,
-          "area_sqft": 252.0,
-          "features": ["bay window", "fireplace", "door to hallway"]
+          "width_ft": null,
+          "length_ft": null,
+          "area_sqft": null,
+          "features": []
         }
       ],
-      "total_area_sqft": 1200.0
+      "total_area_sqft": null
     }
   ],
-  "structure_type": "Single-family residential",
-  "num_bedrooms": 3,
-  "num_bathrooms": 2,
+  "structure_type": "Residential",
+  "num_bedrooms": null,
+  "num_bathrooms": null,
   "num_floors": 1,
   "has_garage": false,
   "has_basement": false,
   "has_garden": false,
-  "scale_detected": "1/4 inch = 1 foot",
-  "special_features": ["open floor plan", "attached garage"],
-  "orientation": "North-facing",
-  "confidence": 0.90
+  "scale_detected": null,
+  "special_features": [],
+  "orientation": null,
+  "confidence": 0.85
 }
 
-Rules:
-- If dimension is not readable, use null (not 0)
-- area_sqft = width_ft * length_ft (calculate it yourself)
-- List ALL rooms visible including hallways, bathrooms, storage
-- confidence = your estimate of how clearly you could read the blueprint
+Additional extraction rules:
+- If a room is visible but its dimensions are not legible, still list the room with null dimensions.
+- area_sqft = width_ft * length_ft (calculate yourself if both are available).
+- If dimensions are in millimetres (e.g. 3625x3375), convert to feet by dividing by 304.8.
+- confidence = your estimate (0.0-1.0) of how clearly you could read this blueprint.
+- List ALL rooms: bedrooms, bathrooms, kitchen, living room, hallways, storage, etc.
 """
 
 
@@ -100,15 +107,45 @@ def extract_with_llava(img: Image.Image) -> dict:
     import ollama
 
     img_b64 = _pil_to_base64(img)
-    response = ollama.chat(
-        model="llava:13b",
-        messages=[{
-            "role": "user",
-            "content": EXTRACTION_PROMPT,
-            "images": [img_b64]
-        }]
-    )
-    return _safe_parse_json(response["message"]["content"])
+
+    # Try progressively harder prompts if LLaVA returns the template verbatim
+    for attempt, extra_hint in enumerate([
+        "",
+        "\n\nIMPORTANT: Look at the image carefully. List every room label you can read.",
+        "\n\nList the room names you see printed on the floor plan, one per line, then provide the JSON.",
+    ]):
+        response = ollama.chat(
+            model="llava:13b",
+            messages=[{
+                "role": "user",
+                "content": EXTRACTION_PROMPT + extra_hint,
+                "images": [img_b64]
+            }],
+            stream=False,
+            options={
+                "num_predict": 4096,   # prevent truncated JSON output
+                "temperature": 0.1,    # lower temperature = more faithful extraction
+            },
+        )
+        raw_text = response["message"]["content"]
+        print(f"[LLaVA attempt {attempt+1} raw output]:", raw_text[:500])
+
+        parsed = _safe_parse_json(raw_text)
+
+        # Check if LLaVA actually extracted something useful
+        # (not just a template stub with 0 rooms and 0.0 values)
+        rooms_found = sum(
+            len(f.get("rooms", [])) for f in parsed.get("floors", [])
+        )
+        confidence = parsed.get("confidence", 0)
+        if rooms_found > 0 or (confidence and float(confidence) > 0.5):
+            return parsed   # good extraction — use it
+
+        if attempt < 2:
+            print(f"[LLaVA] Attempt {attempt+1} returned empty/template result, retrying...")
+
+    # All attempts returned an empty extraction — still return the last parse
+    return parsed
 
 
 # ── Tier 3: pytesseract OCR fallback ───────────────────────
@@ -212,10 +249,79 @@ def _pil_to_base64(img: Image.Image) -> str:
 
 
 def _safe_parse_json(text: str) -> dict:
-    """Strips markdown fences, finds JSON object, parses it."""
+    """
+    Robust multi-strategy JSON parser for LLM outputs.
+    Handles: markdown fences, trailing commas, truncated JSON, 
+    extra prose before/after the JSON block.
+    """
+    import json
+
+    # 1. Strip markdown code fences
     text = re.sub(r"```(?:json)?", "", text).strip()
+    text = text.replace("```", "").strip()
+
+    # 2. Isolate the JSON object (from first { to last })
     start = text.find("{")
-    end = text.rfind("}") + 1
     if start == -1:
-        raise ValueError("No JSON found in VLM response")
-    return json.loads(text[start:end])
+        raise ValueError("No JSON object found in LLaVA response")
+    
+    # Find the matching closing brace
+    depth = 0
+    end = start
+    for i, ch in enumerate(text[start:], start=start):
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                end = i + 1
+                break
+    else:
+        # JSON was truncated — try to auto-close it
+        end = len(text)
+
+    candidate = text[start:end]
+
+    # 3. Strategy A — standard json.loads
+    try:
+        return json.loads(candidate)
+    except json.JSONDecodeError:
+        pass
+
+    # 4. Strategy B — fix trailing commas (common LLM mistake)
+    #    e.g. {"a": 1,} or [1, 2,]
+    fixed = re.sub(r",\s*([}\]])", r"\1", candidate)
+    try:
+        return json.loads(fixed)
+    except json.JSONDecodeError:
+        pass
+
+    # 5. Strategy C — try json5 library if available (very permissive)
+    try:
+        import json5
+        return json5.loads(fixed)
+    except (ImportError, Exception):
+        pass
+
+    # 6. Strategy D — auto-close truncated JSON by counting brackets
+    try:
+        open_braces   = fixed.count("{") - fixed.count("}")
+        open_brackets = fixed.count("[") - fixed.count("]")
+        repaired = fixed.rstrip(",\n\r\t ")
+        repaired += "]" * max(0, open_brackets)
+        repaired += "}" * max(0, open_braces)
+        return json.loads(repaired)
+    except json.JSONDecodeError:
+        pass
+
+    # 7. Final fallback — return a minimal stub so the UI never crashes
+    print(f"[_safe_parse_json] All strategies failed. Raw snippet: {candidate[:300]}")
+    return {
+        "floors": [{"floor_number": 1, "floor_name": "Floor 1", "rooms": [],
+                    "total_area_sqft": None}],
+        "structure_type": "Unknown",
+        "num_bedrooms": 0, "num_bathrooms": 0, "num_floors": 1,
+        "has_garage": False, "has_basement": False, "has_garden": False,
+        "confidence": 0.1,
+        "_parse_error": True,
+    }

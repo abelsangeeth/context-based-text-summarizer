@@ -12,8 +12,9 @@ def clean_text(text: str) -> str:
     text = re.sub(r"[●•▪◦►]", "", text)  # bullet characters
     text = re.sub(r"\b\d+\s*\|\s*P a g e\b", "", text, flags=re.IGNORECASE)  # page numbers
     text = re.sub(r"\.{3,}", ".", text)  # excessive dots
-    # Remove standalone single characters (PDF extraction artifacts)
-    text = re.sub(r"\s[^\w\s]\s", " ", text)
+    # Attach spaced punctuation back to words instead of deleting them
+    text = re.sub(r"\s+([.,;:?!])", r"\1", text)
+    text = re.sub(r"([.,;:?!])\1+", r"\1", text)
     text = re.sub(r"\s+", " ", text)
     text = text.strip()
     return text

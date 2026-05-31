@@ -10,15 +10,15 @@ def json_to_plain_english(data: dict) -> str:
     of the blueprint for NLP summarization.
     """
     floors = data.get("floors", [])
-    n_floors = data.get("num_floors", len(floors))
-    n_bed = data.get("num_bedrooms", "?")
-    n_bath = data.get("num_bathrooms", "?")
+    n_floors = data.get("num_floors", len(floors)) or len(floors) or 1
+    n_bed = data.get("num_bedrooms", "?") or "?"
+    n_bath = data.get("num_bathrooms", "?") or "?"
     total_sqft = data.get("grand_total_sqft",
-                          data.get("total_area_sqft", "?"))
-    total_sqm = data.get("grand_total_sqm", "?")
-    struct = data.get("structure_type", "residential property")
-    orientation = data.get("orientation", "")
-    extras = data.get("special_features", [])
+                          data.get("total_area_sqft")) or "unknown"
+    total_sqm = data.get("grand_total_sqm") or "unknown"
+    struct = data.get("structure_type") or "residential property"
+    orientation = data.get("orientation") or ""
+    extras = data.get("special_features", []) or []
 
     parts = []
 

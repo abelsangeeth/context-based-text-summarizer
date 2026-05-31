@@ -11,7 +11,7 @@ from components.export_utils import export_csv_button
 
 from components.stitch_theme import apply_stitch_theme, page_header, sidebar_brand, sidebar_nav, sidebar_footer
 
-st.set_page_config(page_title="Batch Evaluate — ContextFree-X", page_icon="📦", layout="wide")
+st.set_page_config(page_title="Batch Evaluate — COMPASS", page_icon="📦", layout="wide")
 apply_stitch_theme()
 
 with st.sidebar:
@@ -39,7 +39,7 @@ uploaded = st.file_uploader("Upload CSV", type=["csv"])
 
 if uploaded:
     df = pd.read_csv(uploaded)
-    st.dataframe(df.head(), use_container_width=True)
+    st.dataframe(df.head(), width='stretch')
     st.caption(f"**{len(df)}** rows loaded")
 
     if "text" not in df.columns:
@@ -97,6 +97,6 @@ if uploaded:
                 st.metric(m, f"{result_df[m].mean():.4f}")
 
         st.markdown("#### Detailed Results")
-        st.dataframe(result_df, use_container_width=True, height=400)
+        st.dataframe(result_df, width='stretch', height=400)
 
         export_csv_button(result_df, "batch_results.csv")

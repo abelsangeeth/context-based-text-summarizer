@@ -1,5 +1,5 @@
 """
-ContextFree-X — Universal Text Cleaner & Chunker
+Vision-Augmented LLM Pipeline for Long-Form Document Summarization — Universal Text Cleaner & Chunker
 ═════════════════════════════════════════════════
 Imported by EVERY handler. Provides:
   • clean_text()           — HTML stripping, unicode normalisation, control-char removal
@@ -51,9 +51,11 @@ def clean_text(text: str) -> str:
       2. Normalise Unicode (NFKC)
       3. Remove null bytes & control characters
       4. Remove citation brackets like [1], [2,3]
-      5. Remove bare URLs and emails
-      6. Collapse multiple whitespace / newlines → single space
-      7. Strip leading / trailing whitespace
+      5. Remove bare URLs, emails, DOIs
+      6. Remove web-page boilerplate phrases
+      7. Remove random number sequences (PDF artifacts)
+      8. Collapse multiple whitespace / newlines → single space
+      9. Strip leading / trailing whitespace
     """
     if not text:
         return ""
@@ -71,14 +73,49 @@ def clean_text(text: str) -> str:
     # 4 — Citation brackets
     text = re.sub(r"\[\d+(?:,\s*\d+)*\]", "", text)
 
-    # 5 — URLs and emails
+    # 5 — URLs, emails, and DOI strings
     text = re.sub(r"https?://\S+", "", text)
+    text = re.sub(r"www\.\S+", "", text)
     text = re.sub(r"\S+@\S+\.\S+", "", text)
+    text = re.sub(r"\bdoi[:\s]*\S+", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"\b10\.\d{4,}/\S+", "", text)  # bare DOI like 10.1038/...
 
-    # 6 — Collapse whitespace
+    # 6 — Web-page boilerplate / navigation cruft
+    _BOILERPLATE = [
+        r"Back to Mail Online home\.?",
+        r"Back to the page you came from\.?",
+        r"Click here to (?:go to the article|visit)[^.]*\.?",
+        r"originally published in the online edition[^.]*\.?",
+        r"For confidential support[^.]*\.?",
+        r"call the (?:Samaritans|National)[^.]*\.?",
+        r"In the U\.?S\.?[,.]?\s*call[^.]*\.?",
+        r"In the U\.?K\.?[,.]?\s*(?:call|contact)[^.]*\.?",
+        r"visit a local[^.]*branch[^.]*\.?",
+        r"OPEN\s+Deep learning for text summarizing[^.]*\.?",
+        r"peer-reviewed,? open-access,? scientific journal[^.]*\.?",
+        r"published by the Association for Computing[^.]*\.?",
+    ]
+    for pattern in _BOILERPLATE:
+        text = re.sub(pattern, "", text, flags=re.IGNORECASE)
+
+    # 7 — Journal codes and number-sequence artifacts
+    # Strip journal volume/issue/page codes like "15:36343" or "(2025) 15:36343"
+    text = re.sub(r"\(\d{4}\)\s*\d+:\d+", "", text)          # (2025) 15:36343
+    text = re.sub(r"\b\d{1,3}:\d{4,}\b", "", text)            # 15:36343 standalone
+    # Only strip LONG runs (8+) of small identical/sequential numbers — PDF index artifacts.
+    # Do NOT strip 3-7 numbers; those appear legitimately in statistics, years, and tables.
+    text = re.sub(r"(?:\b\d{1,3}\b\s+){8,}", "", text)
+
+    # 8 — Collapse whitespace
     text = re.sub(r"\s+", " ", text)
 
-    # 7 — Strip
+    # 9 — Clean up orphaned punctuation left after stripping
+    text = re.sub(r"\s+([.,;:?!])", r"\1", text)       # " ." → "."
+    text = re.sub(r"([.,;:?!])\1+", r"\1", text)       # remove repeated punctuation like ".."
+    text = re.sub(r"\b(\d+)\.\s*$", "", text)          # trailing standalone "18."
+    text = re.sub(r"\s+", " ", text)
+
+    # 10 — Strip
     text = text.strip()
 
     return text

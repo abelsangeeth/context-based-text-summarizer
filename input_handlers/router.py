@@ -1,5 +1,5 @@
 """
-ContextFree-X — Master Input Router
+Vision-Augmented LLM Pipeline for Long-Form Document Summarization — Master Input Router
 ════════════════════════════════════
 Single entry point for ALL Streamlit pages.
 

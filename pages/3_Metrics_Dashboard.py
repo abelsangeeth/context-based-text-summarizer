@@ -13,7 +13,7 @@ from components.export_utils import export_csv_button, export_json_button, score
 
 from components.stitch_theme import apply_stitch_theme, page_header, sidebar_brand, sidebar_nav, sidebar_footer
 
-st.set_page_config(page_title="Metrics Dashboard — ContextFree-X", page_icon="📊", layout="wide")
+st.set_page_config(page_title="Metrics Dashboard — COMPASS", page_icon="📊", layout="wide")
 apply_stitch_theme()
 
 with st.sidebar:
@@ -72,14 +72,14 @@ if run and input_text.strip():
     col1, col2 = st.columns([1, 1])
     with col1:
         st.markdown("#### Metric Radar")
-        st.plotly_chart(render_radar_chart(all_scores), use_container_width=True)
+        st.plotly_chart(render_radar_chart(all_scores), width='stretch')
     with col2:
         st.markdown("#### Composite Ranking")
-        st.plotly_chart(render_ranking_bar(all_scores), use_container_width=True)
+        st.plotly_chart(render_ranking_bar(all_scores), width='stretch')
 
     # --- Detailed table ---
     st.markdown("#### Score Breakdown")
-    st.dataframe(render_scores_table(all_scores), use_container_width=True)
+    st.dataframe(render_scores_table(all_scores), width='stretch')
 
     # --- Novel metrics ---
     st.markdown("#### Research Metrics")

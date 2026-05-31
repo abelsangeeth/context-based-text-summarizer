@@ -4,7 +4,7 @@ import streamlit as st
 from components.stitch_theme import apply_stitch_theme, page_header, sidebar_brand, sidebar_nav, sidebar_footer
 from app_history import get_history, clear_history
 
-st.set_page_config(page_title="History — ContextFree-X", page_icon="🕒", layout="wide")
+st.set_page_config(page_title="History — COMPASS", page_icon="🕒", layout="wide")
 apply_stitch_theme()
 
 with st.sidebar:
@@ -21,7 +21,7 @@ history = get_history()
 
 col1, col2 = st.columns([6, 2])
 with col2:
-    if st.button("Clear History", use_container_width=True, type="primary"):
+    if st.button("Clear History", width='stretch', type="primary"):
         clear_history()
         st.rerun()
 

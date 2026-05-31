@@ -1,173 +1,195 @@
-"""
-ContextFree-X — PDF Handler
-════════════════════════════
-Extracts text from uploaded PDFs.
-• Detects research papers (abstract / intro / conclusion).
-• Falls back to chunked full text for regular documents.
-"""
-
+"""Vision-Augmented LLM Pipeline for Long-Form Document Summarization — PDF Handler (Vision Pipeline)"""
+import os
 import re
-
+import fitz  # PyMuPDF
 import pdfplumber
+from PIL import Image
+import logging
 
-from input_handlers.cleaner import clean_text, chunk_text
+from input_handlers.layout_classifier import classify_layout
+from input_handlers.region_handlers import (
+    extract_text_region,
+    extract_table_region,
+    caption_figure_region,
+    extract_equation_region
+)
 
+logger = logging.getLogger(__name__)
 
-# ═══════════════════════════════════════════════════════════════════════════
-#  Public API
-# ═══════════════════════════════════════════════════════════════════════════
-def extract_pdf(uploaded_file) -> dict:
-    """
-    Extract and structure text from a Streamlit UploadedFile PDF.
+def render_pages(pdf_path: str, dpi: int = 200) -> list[dict]:
+    """Render each page of the PDF into a high-resolution pixmap."""
+    fitz.TOOLS.mupdf_display_errors(False) # Suppress mupdf structural warnings
+    doc = fitz.open(pdf_path)
+    pages = []
+    
+    # Check if doc has any text elements to gauge if it's research/dense
+    for i, page in enumerate(doc):
+        mat = fitz.Matrix(dpi / 72, dpi / 72)
+        pix = page.get_pixmap(matrix=mat, colorspace=fitz.csRGB)
+        
+        # Convert to PIL immediately
+        img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+        
+        pages.append({
+            "page_num": i + 1,
+            "image": img,
+            "width": pix.width,
+            "height": pix.height
+        })
+    doc.close()
+    return pages
 
-    Returns
-    -------
-    dict
-        type, source, is_research_paper, pages, sections, chunks,
-        word_count
-    """
-    filename = getattr(uploaded_file, "name", "unknown.pdf")
-
-    try:
-        full_text, page_count = _read_pages(uploaded_file)
-    except Exception as exc:
-        # pdfplumber raises various errors for encrypted PDFs
-        if "password" in str(exc).lower() or "encrypted" in str(exc).lower():
-            raise ValueError("PDF is password protected.") from exc
-        raise
-
-    if not full_text.strip():
-        raise ValueError(
-            "Scanned PDF detected. Please upload a text-based PDF."
-        )
-
-    is_research = _detect_research_paper(full_text)
-
-    if is_research:
-        sections = _extract_sections(full_text)
+def _assemble_document(pdf_path: str, pages_data: list[dict]) -> str:
+    """Classify regions and extract content, assembling it in reading order."""
+    full_text_blocks = []
+    
+    from input_handlers.layout_classifier import get_layout_model
+    is_fallback = get_layout_model() == "fallback"
+    
+    if is_fallback:
+        # Fallback to PyMuPDF native extraction which perfectly handles two-column layouts
+        doc = fitz.open(pdf_path)
+        for page in doc:
+            # get_text("text") natively understands column layouts and returns properly ordered text
+            text = page.get_text("text")
+            if text and text.strip():
+                full_text_blocks.append(text.strip())
+        doc.close()
     else:
-        sections = {
-            "abstract": None,
-            "introduction": None,
-            "conclusion": None,
-        }
+        # Open pdfplumber once per document to avoid heavy I/O
+        with pdfplumber.open(pdf_path) as pl_doc:
+            for pdata in pages_data:
+                img = pdata["image"]
+                page_num = pdata["page_num"]
+                pl_page = pl_doc.pages[page_num - 1]
+                
+                regions = classify_layout(img, page_num)
+                
+                # Sort reading order (y0 primary, x0 secondary for multi-column)
+                # Rough column grouping: if x0s are far apart, they are different columns
+                regions.sort(key=lambda b: (round(b["bbox"][0] / 300), b["bbox"][1]))
+                
+                for region in regions:
+                    rtype = region["type"]
+                    bbox = region["bbox"]
+                    
+                    content = ""
+                    if rtype in ["text", "title"]:
+                        content = extract_text_region(pl_page, bbox)
+                        # Clean markdown injected headers
+                        if rtype == "title" and content:
+                            content = f"\n## {content.strip()}\n"
+                    elif rtype == "table":
+                        # Crop image for img2table
+                        x0, y0, x1, y1 = bbox
+                        crop_img = img.crop((x0, y0, x1, y1))
+                        content = extract_table_region(pl_page, bbox, crop_img)
+                    elif rtype == "figure":
+                        x0, y0, x1, y1 = bbox
+                        crop_img = img.crop((x0, y0, x1, y1))
+                        content = caption_figure_region(crop_img)
+                    elif rtype == "equation":
+                        x0, y0, x1, y1 = bbox
+                        crop_img = img.crop((x0, y0, x1, y1))
+                        content = extract_equation_region(crop_img)
+                    
+                    if content and content.strip():
+                        full_text_blocks.append(content)
 
-    # Clean every section + full text
-    cleaned_full = clean_text(full_text)
-    for key in ("abstract", "introduction", "conclusion"):
-        if sections.get(key):
-            sections[key] = clean_text(sections[key])
-    sections["full_text"] = cleaned_full
-
-    chunks = chunk_text(cleaned_full, max_words=800, overlap=100)
-    word_count = len(cleaned_full.split())
-
-    return {
-        "type": "pdf",
-        "source": filename,
-        "is_research_paper": is_research,
-        "pages": page_count,
-        "sections": sections,
-        "chunks": chunks,
-        "word_count": word_count,
-    }
-
-
-def get_summary_target(extracted: dict) -> str:
-    """
-    Choose the best text segment to summarise.
-
-    Priority:
-      1. Research paper with abstract → abstract
-      2. Research paper without abstract → conclusion
-      3. Regular doc, long → first chunk
-      4. Regular doc, short → full text
-    """
-    sections = extracted.get("sections", {})
-
-    if extracted.get("is_research_paper"):
-        if sections.get("abstract"):
-            return sections["abstract"]
-        if sections.get("conclusion"):
-            return sections["conclusion"]
-
-    # Regular document
-    if extracted["word_count"] > 800:
-        return extracted["chunks"][0]
-    return sections.get("full_text", "")
-
-
-# ═══════════════════════════════════════════════════════════════════════════
-#  Internal helpers
-# ═══════════════════════════════════════════════════════════════════════════
-def _read_pages(uploaded_file) -> tuple[str, int]:
-    """Return (joined_text, page_count) from all PDF pages."""
-    full_text: list[str] = []
-    page_count = 0
-
-    with pdfplumber.open(uploaded_file) as pdf:
-        page_count = len(pdf.pages)
-        for page in pdf.pages:
-            text = page.extract_text()
-            if text:
-                full_text.append(text.strip())
-
-    return "\n\n".join(full_text), page_count
-
-
-def _detect_research_paper(text: str) -> bool:
-    """
-    Heuristic: if ≥ 3 of these common academic headers appear
-    (case-insensitive) the document is likely a research paper.
-    """
-    lower = text.lower()
-    markers = [
-        "abstract",
-        "introduction",
-        "methodology",
-        "related work",
-        "conclusion",
-        "references",
-    ]
-    found = sum(1 for m in markers if m in lower)
-    return found >= 3
-
+    # Join and basic clean
+    assembled = "\n\n".join(full_text_blocks)
+    assembled = re.sub(r'-\n', '', assembled) # Join hyphenated splits
+    assembled = re.sub(r'\n(?!\n|#)', ' ', assembled) # Remove single stray newlines
+    
+    return assembled
 
 def _extract_sections(text: str) -> dict:
-    """
-    Use regex to carve out abstract, introduction and conclusion blocks
-    from a research paper's raw text.
-
-    Returns dict with keys abstract, introduction, conclusion (each str | None).
-    """
-    sections: dict[str, str | None] = {
-        "abstract": None,
-        "introduction": None,
-        "conclusion": None,
+    """Isolate Abstract, Introduction, and Conclusion from research papers."""
+    sections = {
+        "abstract": "",
+        "introduction": "",
+        "conclusion": "",
+        "full_text": text
     }
 
-    patterns = {
-        "abstract": (
-            r"(?i)\n\s*(?:abstract)[:\s]*\n"
-            r"(.*?)"
-            r"(?=\n\s*(?:introduction|1[\.\s]|I[\.\s])\s*\n|\Z)"
-        ),
-        "introduction": (
-            r"(?i)\n\s*(?:introduction|1[\.\s]+introduction)[:\s]*\n"
-            r"(.*?)"
-            r"(?=\n\s*(?:related\s+work|methodology|method|background|"
-            r"2[\.\s]|II[\.\s])\s*\n|\Z)"
-        ),
-        "conclusion": (
-            r"(?i)\n\s*(?:conclusions?)[:\s]*\n"
-            r"(.*?)"
-            r"(?=\n\s*(?:references|bibliography|acknowledgment)\s*\n|\Z)"
-        ),
-    }
+    # Better regex that ignores leading layout-injected '## ' markers
+    abstract_start = re.search(r'(?i)^(?:#+\s*)?abstract\s*$', text, re.MULTILINE)
+    intro_start = re.search(r'(?i)^(?:#+\s*)?(?:1\.?\s*)?introduction\s*$', text, re.MULTILINE)
+    conc_start = re.search(r'(?i)^(?:#+\s*)?(?:(?:5|6|7|8)\.?\s*)?conclusion(?:s)?\s*$', text, re.MULTILINE)
+    refs_start = re.search(r'(?i)^(?:#+\s*)?references\s*$', text, re.MULTILINE)
 
-    for key, pattern in patterns.items():
-        match = re.search(pattern, text, re.DOTALL)
-        if match:
-            sections[key] = match.group(1).strip()
+    # Slice out Abstract
+    if abstract_start and intro_start:
+        sections["abstract"] = text[abstract_start.end():intro_start.start()].strip()
+    elif abstract_start:
+        sections["abstract"] = text[abstract_start.end():abstract_start.end()+2000].strip()
+
+    # Slice out Intro
+    if intro_start:
+        next_sec = re.search(r'(?i)^(?:#+\s*)?(?:2\.?\s*)[A-Z]', text[intro_start.end():], re.MULTILINE)
+        if next_sec:
+            sections["introduction"] = text[intro_start.end():intro_start.end()+next_sec.start()].strip()
+        else:
+            sections["introduction"] = text[intro_start.end():intro_start.end()+3000].strip()
+
+    # Slice out Conclusion
+    if conc_start:
+        if refs_start:
+            sections["conclusion"] = text[conc_start.end():refs_start.start()].strip()
+        else:
+            sections["conclusion"] = text[conc_start.end():].strip()
 
     return sections
+
+def extract_pdf(pdf_input) -> dict:
+    """Main entrypoint for PDF handling logic. Utilizes the vision pipeline."""
+    import tempfile
+    
+    is_file_obj = hasattr(pdf_input, "read")
+    source_name = getattr(pdf_input, "name", "unknown.pdf") if is_file_obj else os.path.basename(pdf_input)
+    
+    logger.info(f"Extracting PDF: {source_name}")
+    
+    if is_file_obj:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+            tmp.write(pdf_input.read())
+            pdf_path = tmp.name
+    else:
+        pdf_path = pdf_input
+        
+    try:
+        pages_data = render_pages(pdf_path, dpi=200)
+        assembled_text = _assemble_document(pdf_path, pages_data)
+        
+        from input_handlers.cleaner import chunk_text
+        
+        is_research = bool(re.search(r'(?i)abstract', assembled_text[:5000]))
+        sections = _extract_sections(assembled_text) if is_research else {"full_text": assembled_text}
+        chunks = chunk_text(assembled_text)
+        
+        return {
+            "type": "pdf",
+            "source": source_name,
+            "is_research_paper": is_research,
+            "pages": len(pages_data),
+            "sections": sections,
+            "chunks": chunks,
+            "word_count": len(assembled_text.split())
+        }
+    finally:
+        if is_file_obj and os.path.exists(pdf_path):
+            try:
+                os.unlink(pdf_path)
+            except Exception as e:
+                logger.warning(f"Could not delete temp PDF file {pdf_path}: {e}")
+
+def get_summary_target(result: dict) -> str:
+    """Determine the primary text segment to send for initial summarization."""
+    sections = result.get("sections", {})
+    if result.get("is_research_paper") and "abstract" in sections and sections["abstract"]:
+        return sections["abstract"]
+    
+    chunks = result.get("chunks", [])
+    if chunks:
+        return chunks[0]
+    return sections.get("full_text", "")

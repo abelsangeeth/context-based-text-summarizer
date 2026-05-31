@@ -1,0 +1,142 @@
+@startuml ContextFreeX_Architecture
+left to right direction
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontSize 10
+skinparam defaultFontColor #000000
+skinparam roundCorner 0
+skinparam nodesep 20
+skinparam ranksep 30
+skinparam linetype ortho
+
+skinparam rectangle {
+    BackgroundColor #FFFFFF
+    BorderColor     #000000
+    BorderThickness 1.5
+    FontColor       #000000
+    FontStyle       bold
+}
+
+skinparam arrow {
+    Color     #000000
+    FontColor #000000
+    FontSize  9
+    Thickness 1.2
+}
+
+title ContextFree-X — System Architecture\nVision-Augmented LLM Pipeline for Long-Form Document Summarization
+
+' ══════════════════════════════════════════
+'  1. USER INTERFACE LAYER
+' ══════════════════════════════════════════
+rectangle "USER INTERFACE LAYER" {
+    rectangle "Text Input"     as UI_TEXT
+    rectangle "PDF Upload"     as UI_PDF
+    rectangle "URL Scrape"     as UI_URL
+    rectangle "Audio Input"    as UI_AUDIO
+    rectangle "YouTube Video"  as UI_YT
+    rectangle "ArXiv Paper"    as UI_ARXIV
+    rectangle "Image / Vision" as UI_IMG
+}
+
+' ══════════════════════════════════════════
+'  2. DATA PROCESSING LAYER
+' ══════════════════════════════════════════
+rectangle "DATA PROCESSING LAYER" {
+    rectangle "Text\nCleaning"          as DP1
+    rectangle "Language\nDetection"     as DP2
+    rectangle "Layout\nClassification"  as DP3
+    rectangle "Chunking &\nSplitting"   as DP4
+    rectangle "Model-Specific\nFormat"  as DP5
+
+    DP1 --> DP2
+    DP2 --> DP3
+    DP3 --> DP4
+    DP4 --> DP5
+}
+
+' ══════════════════════════════════════════
+'  3a. EXTRACTIVE BRANCH
+' ══════════════════════════════════════════
+rectangle "EXTRACTIVE BRANCH" {
+    rectangle "Section\nDetector"  as EX1
+    rectangle "Sentence\nEmbedding" as EX2
+    rectangle "Cosine\nSimilarity" as EX3
+    rectangle "Sentence\nRanking"  as EX4
+    rectangle "Top-N\nSelection"   as EX5
+
+    EX1 --> EX2
+    EX2 --> EX3
+    EX3 --> EX4
+    EX4 --> EX5
+}
+
+' ══════════════════════════════════════════
+'  3b. ABSTRACTIVE BRANCH
+' ══════════════════════════════════════════
+rectangle "ABSTRACTIVE BRANCH" {
+    rectangle "T5-Base"     as AB1
+    rectangle "T5-Large"    as AB2
+    rectangle "BART-CNN"    as AB3
+    rectangle "PEGASUS"     as AB4
+    rectangle "mT5 (Multi)" as AB5
+}
+
+' ══════════════════════════════════════════
+'  4. EVALUATION MODULE
+' ══════════════════════════════════════════
+rectangle "EVALUATION MODULE" {
+    rectangle "ROUGE\n(1 / 2 / L)" as EV1
+    rectangle "BLEU\nScore"        as EV2
+    rectangle "METEOR\nScore"      as EV3
+    rectangle "BERTScore\n(F1)"    as EV4
+    rectangle "Composite\nRanking" as EV5
+
+    EV1 --> EV5
+    EV2 --> EV5
+    EV3 --> EV5
+    EV4 --> EV5
+}
+
+' ══════════════════════════════════════════
+'  5. OUTPUT LAYER
+' ══════════════════════════════════════════
+rectangle "OUTPUT LAYER" {
+    rectangle "Final\nSummary"   as OUT1
+    rectangle "Metrics\nReport"  as OUT2
+    rectangle "Export\nCSV/PDF"  as OUT3
+    rectangle "History\nStore"   as OUT4
+}
+
+' ══════════════════════════════════════════
+'  INTER-LAYER CONNECTIONS
+' ══════════════════════════════════════════
+UI_TEXT  --> DP1 : raw input
+UI_PDF   --> DP1
+UI_URL   --> DP1
+UI_AUDIO --> DP1
+UI_YT    --> DP1
+UI_ARXIV --> DP1
+UI_IMG   --> DP1
+
+DP5 --> EX1 : preprocessed text
+DP5 --> AB1 : preprocessed text
+DP5 --> AB2
+DP5 --> AB3
+DP5 --> AB4
+DP5 --> AB5
+
+EX5 --> EV1 : extractive summary
+AB1 --> EV1 : abstractive summary
+AB2 --> EV2
+AB3 --> EV3
+AB4 --> EV4
+AB5 --> EV4
+
+EV5 --> OUT1 : best summary
+EV5 --> OUT2 : scores
+EV5 --> OUT3 : export
+EV5 --> OUT4 : save
+
+@enduml

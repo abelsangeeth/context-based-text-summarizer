@@ -27,8 +27,33 @@ def clean_summary(text: str) -> str:
     return text
 
 
+# Fix 4 — Enhanced post-processing pass for longform summary paragraphs
 def postprocess_summary(text: str) -> str:
-    """Full postprocessing pipeline for a generated summary."""
+    """Full postprocessing pipeline for a generated summary paragraph."""
+    if not text:
+        return text
+
+    # Step 1: Remove duplicate sentences
     text = remove_duplicate_sentences(text)
-    text = clean_summary(text)
+
+    # Step 2: Remove repeated consecutive words (common BART artifact)
+    # e.g. "the the", "is is", "a a"
+    text = re.sub(r'\b(\w+)\s+\1\b', r'\1', text, flags=re.IGNORECASE)
+
+    # Step 3: Capitalize first letter
+    text = text[0].upper() + text[1:] if text else text
+
+    # Step 4: Ensure ends with a sentence-ending punctuation
+    if text and text[-1] not in '.!?':
+        text += '.'
+
+    # Step 5: Remove trailing ellipsis artifacts from model truncation
+    text = re.sub(r'\.{3,}$', '.', text)
+
+    # Step 6: Collapse multiple spaces
+    text = re.sub(r' {2,}', ' ', text).strip()
+
+    # Step 7: Fix spacing before punctuation
+    text = re.sub(r'\s+([.!?,;:])', r'\1', text)
+
     return text

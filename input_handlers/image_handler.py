@@ -1,5 +1,5 @@
 """
-ContextFree-X — Image Summarization Handler
+Vision-Augmented LLM Pipeline for Long-Form Document Summarization — Image Summarization Handler
 ════════════════════════════════════════════
 Generates a natural-language description of any image and
 detects all visible objects with confidence scores.

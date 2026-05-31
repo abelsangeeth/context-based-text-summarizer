@@ -1,5 +1,5 @@
 """
-ContextFree-X — Blueprint Handler
+Vision-Augmented LLM Pipeline for Long-Form Document Summarization — Blueprint Handler
 ══════════════════════════════════
 Wraps the ``vision_summarizer/`` module as a unified input handler
 so that architectural blueprints plug cleanly into the router.

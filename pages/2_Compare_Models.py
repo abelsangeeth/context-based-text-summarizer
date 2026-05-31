@@ -14,7 +14,7 @@ from components.export_utils import export_csv_button, export_summary_text, scor
 
 from components.stitch_theme import apply_stitch_theme, page_header, best_badge, sidebar_brand, sidebar_nav, sidebar_footer
 
-st.set_page_config(page_title="Compare Models — ContextFree-X", page_icon="⚔️", layout="wide")
+st.set_page_config(page_title="Compare Models — COMPASS", page_icon="⚔️", layout="wide")
 apply_stitch_theme()
 
 with st.sidebar:
@@ -42,7 +42,7 @@ selected = st.multiselect(
 
 col_run, col_ref = st.columns([1, 3])
 with col_run:
-    run = st.button("Compare", type="primary", use_container_width=True,
+    run = st.button("Compare", type="primary", width='stretch',
                     disabled=len(input_text.split()) < 10 or len(selected) < 2)
 with col_ref:
     ref_text = st.text_input("Reference summary (optional, for scoring)",

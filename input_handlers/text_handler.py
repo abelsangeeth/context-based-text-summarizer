@@ -1,5 +1,5 @@
 """
-ContextFree-X — Raw Text Handler
+Vision-Augmented LLM Pipeline for Long-Form Document Summarization — Raw Text Handler
 ═════════════════════════════════
 Accepts plain text (paste / textarea) and returns a unified dict
 for the router pipeline.

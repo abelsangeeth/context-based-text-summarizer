@@ -93,10 +93,10 @@ def render_metrics_dashboard(all_scores: dict):
     col1, col2 = st.columns([1, 1])
     with col1:
         st.markdown("#### Metric Comparison")
-        st.plotly_chart(render_radar_chart(all_scores), use_container_width=True)
+        st.plotly_chart(render_radar_chart(all_scores), width='stretch')
     with col2:
         st.markdown("#### Composite Ranking")
-        st.plotly_chart(render_ranking_bar(all_scores), use_container_width=True)
+        st.plotly_chart(render_ranking_bar(all_scores), width='stretch')
 
     st.markdown("#### Detailed Scores")
-    st.dataframe(render_scores_table(all_scores), use_container_width=True)
+    st.dataframe(render_scores_table(all_scores), width='stretch')

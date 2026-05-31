@@ -1,4 +1,4 @@
-"""Stitch-inspired Material Design 3 theme for ContextFree-X.
+"""Stitch-inspired Material Design 3 theme for COMPASS — Comparative Multi-model Pipeline with Adaptive Semantic Scoring.
 
 Call `apply_stitch_theme()` at the top of every page (after st.set_page_config)
 to inject fonts, icons, and all CSS overrides.
@@ -845,12 +845,12 @@ def apply_stitch_theme() -> None:
 # ── Sidebar helpers ──────────────────────────────────────────────────────────
 
 def sidebar_brand() -> None:
-    """Render the ContextFree-X brand block inside the sidebar."""
+    """Render the COMPASS brand block inside the sidebar."""
     st.markdown(
         """
         <div class="sb-brand">
-            <div class="sb-brand-name">ContextFree-X</div>
-            <div class="sb-brand-sub">Architectural Curator</div>
+            <div class="sb-brand-name">COMPASS</div>
+            <div class="sb-brand-sub">Comparative Multi-model Pipeline · Adaptive Semantic Scoring</div>
         </div>
         """,
         unsafe_allow_html=True,

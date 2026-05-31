@@ -1,5 +1,5 @@
 """
-ContextFree-X — Audio Transcription Handler
+Vision-Augmented LLM Pipeline for Long-Form Document Summarization — Audio Transcription Handler
 ════════════════════════════════════════════
 Uses OpenAI Whisper (local model, no API key needed) to transcribe
 uploaded audio files into text for the summarisation pipeline.

@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ContextFree-X | AI Summarization Platform</title>
+  <meta name="description" content="Research-grade multi-domain text summarizer with 5 transformer models, 6 evaluation metrics, multilingual support, and research paper analysis."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <!-- Sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo">
+        <span class="material-symbols-outlined" style="font-size:22px;color:#fff;font-variation-settings:'FILL' 1,'wght' 500,'GRAD' 0,'opsz' 24;">auto_awesome</span>
+      </div>
+      <div>
+        <div class="sb-brand-name">ContextFree-X</div>
+        <div class="sb-brand-sub">Architectural Curator</div>
+      </div>
+    </div>
+
+    <div class="sb-nav">
+      <a class="sb-nav-item active" data-page="summarize" onclick="navigate('summarize')">
+        <span class="material-symbols-outlined s-icon">summarize</span>
+        Summarize
+      </a>
+      <a class="sb-nav-item" data-page="compare" onclick="navigate('compare')">
+        <span class="material-symbols-outlined s-icon">compare_arrows</span>
+        Compare Models
+      </a>
+      <a class="sb-nav-item" data-page="metrics" onclick="navigate('metrics')">
+        <span class="material-symbols-outlined s-icon">dashboard</span>
+        Metrics Dashboard
+      </a>
+      <a class="sb-nav-item" data-page="batch" onclick="navigate('batch')">
+        <span class="material-symbols-outlined s-icon">layers</span>
+        Batch Evaluate
+      </a>
+      <a class="sb-nav-item" data-page="multilingual" onclick="navigate('multilingual')">
+        <span class="material-symbols-outlined s-icon">language</span>
+        Multilingual
+      </a>
+      <a class="sb-nav-item" data-page="blueprint" onclick="navigate('blueprint')">
+        <span class="material-symbols-outlined s-icon">architecture</span>
+        Blueprint Summarizer
+      </a>
+    </div>
+
+    <div class="sb-footer">
+      <div class="sb-footer-card">
+        <strong>Models</strong>
+        T5 · BART · PEGASUS · mT5
+      </div>
+      <div class="sb-footer-user">
+        <div class="sb-avatar">AC</div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#191b23;">Alex Chen</div>
+          <div style="font-size:10px;color:#727785;">Lead Researcher</div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main content -->
+  <main class="main-content">
+    <!-- ══════════ PAGE: SUMMARIZE ══════════ -->
+    <section id="page-summarize" class="page active">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">New <span class="gradient-text">Summary</span></h1>
+          <p class="page-subtitle">Distill complex documents into precise, structured insights.</p>
+        </div>
+        <div class="breadcrumbs">
+          <span class="chip">Source: Text</span>
+          <span class="chip chip-primary" id="status-source">SOURCE: TEXT</span>
+          <span class="chip chip-primary" id="status-model">MODEL: T5-LARGE</span>
+          <span class="chip chip-success" id="status-ready">READY</span>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <!-- Left: Input -->
+        <div class="input-panel">
+          <div class="card">
+            <div class="card-label">Input Source</div>
+            <div class="tab-group" id="input-tabs">
+              <button class="tab active" onclick="switchInputTab('text',this)">Text</button>
+              <button class="tab" onclick="switchInputTab('pdf',this)">PDF</button>
+              <button class="tab" onclick="switchInputTab('url',this)">URL</button>
+              <button class="tab" onclick="switchInputTab('youtube',this)">YouTube</button>
+              <button class="tab" onclick="switchInputTab('arxiv',this)">arXiv</button>
+            </div>
+
+            <!-- TEXT panel -->
+            <div id="input-panel-text" class="input-panel-tab">
+              <textarea id="input-text" class="txt-area" rows="10"
+                placeholder="Paste your text, research paper, or article here…"></textarea>
+              <div class="input-meta">
+                <span id="word-count" class="meta-chip">0 words</span>
+                <span class="meta-chip">Max: 4096 tokens</span>
+              </div>
+            </div>
+
+            <!-- PDF panel -->
+            <div id="input-panel-pdf" class="input-panel-tab" style="display:none;">
+              <div class="dropzone" id="pdf-dropzone"
+                   ondragover="dragOver(event,'pdf-dropzone')"
+                   ondragleave="dragLeave('pdf-dropzone')"
+                   ondrop="dropPdf(event)"
+                   onclick="document.getElementById('pdf-file-input').click()">
+                <span class="material-symbols-outlined dropzone-icon">picture_as_pdf</span>
+                <p class="dropzone-title">Drop PDF here</p>
+                <p class="dropzone-sub">or click to browse · .pdf only</p>
+                <input type="file" id="pdf-file-input" accept=".pdf" style="display:none;"
+                       onchange="pdfFileSelected(this)"/>
+              </div>
+              <div id="pdf-file-info" style="display:none;margin-top:12px;" class="file-info-row">
+                <span class="material-symbols-outlined" style="color:#065f46;font-size:20px;font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;">check_circle</span>
+                <span id="pdf-file-name" style="font-size:13px;font-weight:600;color:#065f46;flex:1;"></span>
+                <button class="btn-secondary" style="padding:4px 10px;font-size:11px;" onclick="clearPdf()">Remove</button>
+              </div>
+              <div class="input-meta" style="margin-top:8px;">
+                <span class="meta-chip">Extracts text, abstract &amp; sections automatically</span>
+              </div>
+            </div>
+
+            <!-- URL panel -->
+            <div id="input-panel-url" class="input-panel-tab" style="display:none;">
+              <div class="url-input-wrap">
+                <span class="material-symbols-outlined url-icon">link</span>
+                <input type="url" id="url-input" class="url-field"
+                       placeholder="https://example.com/article-or-paper"/>
+              </div>
+              <div class="input-meta" style="margin-top:8px;">
+                <span class="meta-chip">Supports news articles, arXiv, Wikipedia, blogs</span>
+              </div>
+              <div id="url-preview" style="display:none;margin-top:12px;background:#f2f3fd;border-radius:12px;padding:12px 16px;">
+                <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#0058be;margin-bottom:4px;">Fetched</div>
+                <p id="url-preview-text" style="font-size:0.85rem;color:#424754;line-height:1.6;"></p>
+              </div>
+            </div>
+
+            <!-- YouTube panel -->
+            <div id="input-panel-youtube" class="input-panel-tab" style="display:none;">
+              <div class="url-input-wrap">
+                <span class="material-symbols-outlined url-icon" style="color:#FF0000;">smart_display</span>
+                <input type="url" id="yt-input" class="url-field"
+                       placeholder="https://www.youtube.com/watch?v=…"/>
+              </div>
+              <div class="input-meta" style="margin-top:8px;">
+                <span class="meta-chip">Extracts auto-generated or manual captions</span>
+              </div>
+              <div id="yt-preview" style="display:none;margin-top:12px;">
+                <div class="yt-thumb-wrap">
+                  <img id="yt-thumb" src="" alt="Video thumbnail" style="width:100%;border-radius:10px;"/>
+                </div>
+                <p id="yt-title" style="font-size:0.85rem;font-weight:600;color:#191b23;margin-top:8px;"></p>
+              </div>
+            </div>
+
+            <!-- arXiv panel -->
+            <div id="input-panel-arxiv" class="input-panel-tab" style="display:none;">
+              <div class="url-input-wrap">
+                <span class="material-symbols-outlined url-icon">school</span>
+                <input type="text" id="arxiv-input" class="url-field"
+                       placeholder="e.g. 1706.03762  or  https://arxiv.org/abs/1706.03762"/>
+              </div>
+              <div class="input-meta" style="margin-top:8px;">
+                <span class="meta-chip">Fetches abstract + full paper from arXiv</span>
+              </div>
+              <div style="margin-top:10px;display:flex;gap:8px;">
+                <label style="font-size:0.82rem;color:#727785;display:flex;align-items:center;gap:6px;">
+                  <input type="radio" name="arxiv-source" id="arxiv-source" value="abstract" checked> Abstract only
+                </label>
+                <label style="font-size:0.82rem;color:#727785;display:flex;align-items:center;gap:6px;">
+                  <input type="radio" name="arxiv-source" value="full_paper"> Full paper
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:16px;">
+            <div class="card-label">Extraction Settings</div>
+            <div class="setting-row">
+              <label class="setting-label">Model</label>
+              <select class="select-input" id="summarize-model-select">
+                <option value="t5-large">T5 Large</option>
+                <option value="bart-cnn" selected>BART CNN</option>
+                <option value="pegasus">PEGASUS</option>
+                <option value="t5-base">T5 Base</option>
+              </select>
+            </div>
+            <div class="setting-row">
+              <label class="setting-label">Summary Length</label>
+              <select class="select-input">
+                <option>Balanced</option>
+                <option>Short</option>
+                <option>Detailed</option>
+              </select>
+            </div>
+            <div class="setting-row">
+              <label class="setting-label">Mode</label>
+              <select class="select-input">
+                <option>Standard</option>
+                <option>Research Paper</option>
+                <option>Blueprint</option>
+              </select>
+            </div>
+            <button class="btn-primary" onclick="runSummarize()" style="width:100%;margin-top:8px;">
+              <span class="material-symbols-outlined" style="font-size:18px;">auto_awesome</span>
+              Run Summarizer
+            </button>
+          </div>
+
+          <div class="tip-card">
+            <span class="material-symbols-outlined" style="color:#0058be;font-size:18px;">lightbulb</span>
+            <p><strong>Pro Tip</strong> — Use "Blueprint Summarizer" for technical manuals to generate hierarchical diagrams alongside text summaries.</p>
+          </div>
+        </div>
+
+        <!-- Right: Output -->
+        <div class="output-panel">
+          <div class="output-card" id="output-card">
+            <div class="output-placeholder" id="output-placeholder">
+              <span class="material-symbols-outlined" style="font-size:48px;color:#c2c6d6;font-variation-settings:'FILL' 0,'wght' 200,'GRAD' 0,'opsz' 48;">article</span>
+              <p style="color:#727785;margin-top:12px;font-size:0.9rem;">Your summary will appear here</p>
+            </div>
+            <div class="output-body" id="output-body" style="display:none;">
+              <div class="output-header-row">
+                <span class="model-chip">
+                  <span class="material-symbols-outlined" style="font-size:14px;font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;">auto_awesome</span>
+                  T5-Large
+                </span>
+                <div style="display:flex;gap:8px;">
+                  <button class="icon-btn" title="Copy"><span class="material-symbols-outlined" style="font-size:18px;">content_copy</span></button>
+                  <button class="icon-btn" title="Download"><span class="material-symbols-outlined" style="font-size:18px;">download</span></button>
+                </div>
+              </div>
+              <h3 class="output-title">Executive Summary</h3>
+              <p class="output-text" id="output-text"></p>
+              <div class="metrics-strip" id="metrics-strip"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ PAGE: COMPARE MODELS ══════════ -->
+    <section id="page-compare" class="page">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Compare <span class="gradient-text">Models</span></h1>
+          <p class="page-subtitle">Run the same text through all models and compare quality, metrics, and summaries side-by-side.</p>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-label">Input Text</div>
+        <textarea class="txt-area" rows="5" id="compare-input" placeholder="Enter text to compare across all models…"></textarea>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;align-items:flex-end;">
+          <div style="flex:1;min-width:200px;">
+            <label class="setting-label">Models to compare</label>
+            <select id="compare-model-select" class="select-input" multiple size="4" style="height:auto;">
+              <option value="t5-large" selected>T5 Large</option>
+              <option value="bart-cnn" selected>BART CNN</option>
+              <option value="pegasus" selected>PEGASUS</option>
+              <option value="t5-base" selected>T5 Base</option>
+            </select>
+          </div>
+          <div style="flex:2;min-width:200px;">
+            <label class="setting-label">Reference summary (optional — for scoring)</label>
+            <input type="text" id="compare-ref" class="url-field" placeholder="Paste a human-written reference summary…" style="margin-top:4px;"/>
+          </div>
+        </div>
+        <div id="compare-recommendation" style="margin-top:12px;padding:12px;background:#eff6ff;border-left:4px solid #0058be;border-radius:8px;font-size:0.88rem;color:#1e3a5f;display:none;"></div>
+        <button class="btn-primary" style="margin-top:12px;" onclick="runCompare(); document.getElementById('compare-recommendation').style.display='block';">
+          <span class="material-symbols-outlined" style="font-size:18px;">compare_arrows</span>
+          Compare All Models
+        </button>
+      </div>
+      <div class="model-grid" id="model-grid">
+        <div class="model-card-placeholder">Run comparison to see results</div>
+      </div>
+    </section>
+
+    <!-- ══════════ PAGE: METRICS DASHBOARD ══════════ -->
+    <section id="page-metrics" class="page">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Metrics <span class="gradient-text">Dashboard</span></h1>
+          <p class="page-subtitle">Comprehensive evaluation — ROUGE, BLEU, BERTScore, METEOR, Abstractiveness, Compression.</p>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-label">Input Text</div>
+        <textarea class="txt-area" rows="5" id="metrics-input" placeholder="Paste article text to evaluate summaries against…"></textarea>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;">
+          <div style="flex:1;min-width:180px;">
+            <label class="setting-label">Models to evaluate</label>
+            <select id="metrics-model-select" class="select-input" multiple size="4" style="height:auto;">
+              <option value="t5-large" selected>T5 Large</option>
+              <option value="bart-cnn" selected>BART CNN</option>
+              <option value="pegasus" selected>PEGASUS</option>
+              <option value="t5-base" selected>T5 Base</option>
+            </select>
+          </div>
+          <div style="flex:2;min-width:200px;">
+            <label class="setting-label">Reference summary (optional)</label>
+            <textarea class="txt-area" rows="3" id="metrics-ref" style="margin-top:4px;" placeholder="Human-written reference for scoring…"></textarea>
+          </div>
+        </div>
+        <button id="metrics-run-btn" class="btn-primary" style="margin-top:12px;" onclick="runMetrics()">
+          <span class="material-symbols-outlined" style="font-size:18px;">analytics</span>
+          Run Full Evaluation
+        </button>
+      </div>
+      <div id="metrics-results" style="display:none;"></div>
+    </section>
+      <div class="metrics-grid">
+        <div class="metric-tile">
+          <div class="metric-tile-label">ROUGE-1</div>
+          <div class="metric-tile-value">0.512</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:51.2%"></div></div>
+        </div>
+        <div class="metric-tile">
+          <div class="metric-tile-label">ROUGE-2</div>
+          <div class="metric-tile-value">0.318</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:31.8%"></div></div>
+        </div>
+        <div class="metric-tile">
+          <div class="metric-tile-label">ROUGE-L</div>
+          <div class="metric-tile-value">0.471</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:47.1%"></div></div>
+        </div>
+        <div class="metric-tile">
+          <div class="metric-tile-label">BERTScore F1</div>
+          <div class="metric-tile-value">0.881</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:88.1%"></div></div>
+        </div>
+        <div class="metric-tile">
+          <div class="metric-tile-label">BLEU</div>
+          <div class="metric-tile-value">0.204</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:20.4%"></div></div>
+        </div>
+        <div class="metric-tile">
+          <div class="metric-tile-label">METEOR</div>
+          <div class="metric-tile-value">0.443</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:44.3%"></div></div>
+        </div>
+        <div class="metric-tile">
+          <div class="metric-tile-label">Abstractiveness</div>
+          <div class="metric-tile-value">72.4%</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:72.4%;background:linear-gradient(90deg,#924700,#b75b00)"></div></div>
+        </div>
+        <div class="metric-tile">
+          <div class="metric-tile-label">Compression</div>
+          <div class="metric-tile-value">4.3×</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:65%;background:linear-gradient(90deg,#495e8a,#0058be)"></div></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:20px;">
+        <div class="card-label">Model Ranking</div>
+        <div id="ranking-list">
+          <div class="ranking-row">
+            <span class="rank-badge gold">1</span>
+            <span class="rank-model">BART CNN</span>
+            <span class="best-badge"><span class="material-symbols-outlined" style="font-size:12px;font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;">stars</span> Best Model</span>
+            <span class="rank-score">0.641</span>
+          </div>
+          <div class="ranking-row">
+            <span class="rank-badge">2</span><span class="rank-model">PEGASUS</span><span></span><span class="rank-score">0.612</span>
+          </div>
+          <div class="ranking-row">
+            <span class="rank-badge">3</span><span class="rank-model">T5-Large</span><span></span><span class="rank-score">0.588</span>
+          </div>
+          <div class="ranking-row">
+            <span class="rank-badge">4</span><span class="rank-model">T5-Base</span><span></span><span class="rank-score">0.551</span>
+          </div>
+          <div class="ranking-row">
+            <span class="rank-badge">5</span><span class="rank-model">mT5</span><span></span><span class="rank-score">0.499</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ PAGE: BATCH EVALUATE ══════════ -->
+    <section id="page-batch" class="page">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Batch <span class="gradient-text">Evaluate</span></h1>
+          <p class="page-subtitle">Process hundreds of samples from a CSV file with full metric scoring and export.</p>
+        </div>
+      </div>
+      <div class="two-col-equal">
+        <div class="card">
+          <div class="card-label">Upload Dataset</div>
+          <div class="dropzone" id="dropzone" ondragover="dragOver(event,'dropzone')" ondragleave="dragLeave('dropzone')" ondrop="handleBatchDrop(event)" onclick="document.getElementById('file-input').click()">
+            <span class="material-symbols-outlined dropzone-icon">upload_file</span>
+            <p class="dropzone-title">Drop CSV file here</p>
+            <p class="dropzone-sub">or click to browse · needs a <strong>text</strong> column</p>
+            <input type="file" id="file-input" accept=".csv" style="display:none;" onchange="batchFileSelected(this)"/>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-label">Batch Settings</div>
+          <div class="setting-row">
+            <label class="setting-label">Model</label>
+            <select id="batch-model-select" class="select-input">
+              <option value="t5-large">T5 Large</option>
+              <option value="bart-cnn" selected>BART CNN</option>
+              <option value="pegasus">PEGASUS</option>
+              <option value="t5-base">T5 Base</option>
+            </select>
+          </div>
+          <div class="setting-row">
+            <label class="setting-label">Max rows</label>
+            <input type="number" id="batch-max-rows" class="url-field" value="50" min="1" max="500" style="width:100px;"/>
+          </div>
+          <button class="btn-primary" style="width:100%;margin-top:8px;" onclick="runBatch()">
+            <span class="material-symbols-outlined" style="font-size:18px;">play_arrow</span>
+            Start Batch Job
+          </button>
+        </div>
+      </div>
+      <div class="card" id="batch-results" style="margin-top:16px;display:none;">
+        <div class="card-label">Results</div>
+        <div class="progress-wrap">
+          <div class="progress-bar" id="batch-progress" style="width:0%"></div>
+        </div>
+        <p id="batch-status" style="font-size:13px;color:#727785;margin-top:8px;">Processing…</p>
+        <div id="batch-averages" style="display:none;flex-wrap:wrap;gap:12px;margin-top:12px;"></div>
+        <div id="batch-table" style="display:none;margin-top:16px;overflow-x:auto;"></div>
+        <button id="batch-export" class="btn-secondary" style="display:none;margin-top:12px;">
+          <span class="material-symbols-outlined" style="font-size:16px;">download</span> Export CSV
+        </button>
+      </div>
+    </section>
+
+
+    <!-- ══════════ PAGE: MULTILINGUAL ══════════ -->
+    <section id="page-multilingual" class="page">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Multilingual <span class="gradient-text">Summarization</span></h1>
+          <p class="page-subtitle">Auto-detect language, summarize with the best model, translate to English — 8 languages supported.</p>
+        </div>
+      </div>
+      <div class="two-col">
+        <div>
+          <div class="card">
+            <div class="card-label">Input Text</div>
+            <textarea class="txt-area" rows="8" id="ml-input"
+              placeholder="Paste text in English, French, German, Spanish, Chinese, Arabic, Tamil, Hindi…"></textarea>
+            <div class="lang-detect-row">
+              <div class="lang-pill" id="lang-pill">
+                <span class="lang-dot"></span>
+                <span id="lang-label">Auto-Detect</span>
+              </div>
+            </div>
+            <div class="setting-row" style="margin-top:8px;">
+              <label class="setting-label">Override language</label>
+              <select id="lang-override" class="select-input">
+                <option value="">Auto-detect</option>
+              </select>
+            </div>
+            <button class="btn-primary" style="width:100%;margin-top:12px;" onclick="runMultilingual()">
+              <span class="material-symbols-outlined" style="font-size:18px;">translate</span>
+              Summarize Multilingually
+            </button>
+          </div>
+          <div class="card" style="margin-top:16px;">
+            <div class="card-label">Supported Languages</div>
+            <div class="lang-grid">
+              <span class="lang-chip">🇬🇧 English</span>
+              <span class="lang-chip">🇮🇳 Hindi</span>
+              <span class="lang-chip">🇮🇳 Tamil</span>
+              <span class="lang-chip">🇫🇷 French</span>
+              <span class="lang-chip">🇩🇪 German</span>
+              <span class="lang-chip">🇪🇸 Spanish</span>
+              <span class="lang-chip">🇨🇳 Chinese</span>
+              <span class="lang-chip">🇸🇦 Arabic</span>
+            </div>
+          </div>
+        </div>
+        <div class="output-card" id="ml-output">
+          <div class="output-placeholder">
+            <span class="material-symbols-outlined" style="font-size:48px;color:#c2c6d6;font-variation-settings:'FILL' 0,'wght' 200,'GRAD' 0,'opsz' 48;">translate</span>
+            <p style="color:#727785;margin-top:12px;font-size:0.9rem;">Multilingual summary will appear here</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ══════════ PAGE: BLUEPRINT SUMMARIZER ══════════ -->
+    <section id="page-blueprint" class="page">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Blueprint <span class="gradient-text">Summarizer</span></h1>
+          <p class="page-subtitle">Upload any floor plan — JPG, PNG, PDF — extract rooms, areas, and generate an AI property summary.</p>
+        </div>
+      </div>
+      <div class="two-col">
+        <div>
+          <div class="card">
+            <div class="card-label">Upload Floor Plan</div>
+            <div class="dropzone" id="bp-dropzone"
+                 ondragover="dragOver(event,'bp-dropzone')" ondragleave="dragLeave('bp-dropzone')"
+                 ondrop="dropBlueprint(event)"
+                 onclick="document.getElementById('bp-file-input').click()">
+              <span class="material-symbols-outlined dropzone-icon">architecture</span>
+              <p class="dropzone-title">Drop blueprint here</p>
+              <p class="dropzone-sub">JPG · PNG · PDF · DXF — or click to browse</p>
+              <input type="file" id="bp-file-input" accept=".jpg,.jpeg,.png,.pdf,.dxf,.dwg" style="display:none;"
+                     onchange="blueprintFileSelected(this)"/>
+            </div>
+            <div class="setting-row" style="margin-top:12px;">
+              <label class="setting-label">Extraction Engine</label>
+              <select id="bp-method" class="select-input">
+                <option value="auto">Auto (recommended)</option>
+                <option value="ocr">OCR only</option>
+                <option value="llava">LLaVA</option>
+                <option value="claude">Claude</option>
+              </select>
+            </div>
+            <div class="setting-row">
+              <label class="setting-label">Display Units</label>
+              <select id="bp-unit" class="select-input">
+                <option value="sq ft">sq ft</option>
+                <option value="sq m">sq m</option>
+              </select>
+            </div>
+            <button id="bp-run-btn" class="btn-primary" style="width:100%;margin-top:12px;" onclick="runBlueprint()">
+              <span class="material-symbols-outlined" style="font-size:18px;">search</span>
+              Analyze Blueprint
+            </button>
+          </div>
+        </div>
+        <div class="output-card" id="bp-output">
+          <div id="bp-placeholder" class="output-placeholder">
+            <span class="material-symbols-outlined" style="font-size:48px;color:#c2c6d6;font-variation-settings:'FILL' 0,'wght' 200,'GRAD' 0,'opsz' 48;">architecture</span>
+            <p style="color:#727785;margin-top:12px;font-size:0.9rem;">Blueprint analysis will appear here</p>
+          </div>
+          <div id="bp-result" style="display:none;"></div>
+        </div>
+      </div>
+    </section>
+
+      <div class="two-col">
+        <div>
+          <div class="card">
+            <div class="card-label">Document Input</div>
+            <div class="dropzone" style="padding:32px;" onclick="document.getElementById('bp-file').click()">
+              <span class="material-symbols-outlined dropzone-icon" style="font-size:36px;">upload_file</span>
+              <p class="dropzone-title" style="font-size:14px;">Drop PDF or paste text</p>
+              <input type="file" id="bp-file" accept=".pdf" style="display:none;"/>
+            </div>
+            <div style="margin-top:12px;text-align:center;color:#727785;font-size:12px;">— or —</div>
+            <textarea class="txt-area" rows="5" style="margin-top:8px;" id="bp-text"
+              placeholder="Paste technical document text…"></textarea>
+            <div class="setting-row" style="margin-top:12px;">
+              <label class="setting-label">Blueprint Depth</label>
+              <select class="select-input">
+                <option>Level 2 — Sections</option>
+                <option>Level 3 — Subsections</option>
+                <option>Level 4 — Full Hierarchy</option>
+              </select>
+            </div>
+            <button class="btn-primary" style="width:100%;margin-top:12px;" onclick="runBlueprint()">
+              <span class="material-symbols-outlined" style="font-size:18px;">architecture</span>
+              Generate Blueprint
+            </button>
+          </div>
+        </div>
+        <div class="output-card" id="bp-output">
+          <div id="bp-placeholder" class="output-placeholder">
+            <span class="material-symbols-outlined" style="font-size:48px;color:#c2c6d6;font-variation-settings:'FILL' 0,'wght' 200,'GRAD' 0,'opsz' 48;">architecture</span>
+            <p style="color:#727785;margin-top:12px;font-size:0.9rem;">Blueprint will appear here</p>
+          </div>
+          <div id="bp-result" style="display:none;">
+            <div class="output-header-row">
+              <span class="model-chip">
+                <span class="material-symbols-outlined" style="font-size:14px;font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;">architecture</span>
+                Blueprint Mode
+              </span>
+              <button class="icon-btn"><span class="material-symbols-outlined" style="font-size:18px;">download</span></button>
+            </div>
+            <h3 class="output-title">Executive Blueprint: Neural Network Compression</h3>
+            <div class="blueprint-tree">
+              <div class="tree-node tree-l1">📄 Document Overview</div>
+              <div class="tree-node tree-l2">└─ 1. Introduction &amp; Motivation</div>
+              <div class="tree-node tree-l2">└─ 2. Architecture: PTQ Framework</div>
+              <div class="tree-node tree-l3">&nbsp;&nbsp;&nbsp;&nbsp;└─ 2.1 Layer-wise Importance Metric</div>
+              <div class="tree-node tree-l3">&nbsp;&nbsp;&nbsp;&nbsp;└─ 2.2 Sub-8-bit Precision</div>
+              <div class="tree-node tree-l2">└─ 3. Experimental Results</div>
+              <div class="tree-node tree-l3">&nbsp;&nbsp;&nbsp;&nbsp;└─ 3.1 Memory Reduction: 40%</div>
+              <div class="tree-node tree-l3">&nbsp;&nbsp;&nbsp;&nbsp;└─ 3.2 Perplexity: &lt;1% degradation</div>
+              <div class="tree-node tree-l2">└─ 4. Conclusions</div>
+            </div>
+            <div style="margin-top:20px;background:#f2f3fd;border-radius:12px;padding:16px;">
+              <p class="output-text">The research paper introduces a novel approach to post-training quantization (PTQ) that maintains high precision for large-scale transformer models. By implementing a layer-wise importance metric, the system identifies non-critical neural pathways for aggressive pruning, resulting in a 40% reduction in memory footprint without exceeding 1% perplexity degradation.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -132,17 +132,30 @@ def _split_by_topic_shift(text: str, chunk_size: int = 50) -> list[dict]:
         
     merged_sections = []
     current_section = [windows[0]]
+    current_word_count = len(windows[0].split())
+    
+    MAX_SECTION_WORDS = 500  # Fix 3.2: was 800 — shorter sections summarize cleaner
     
     for i in range(len(windows) - 1):
         sim = cosine_sim[i][i+1]
-        if sim < 0.45:  # hyper aggressive topic shift threshold
+        next_words = len(windows[i+1].split())
+        
+        # Split if topic shifts OR section is getting too large
+        # Fix 3.1: raised threshold 0.30 → 0.45 for fewer, more coherent sections
+        if sim < 0.45 or current_word_count + next_words > MAX_SECTION_WORDS:
             merged_sections.append(" ".join(current_section))
             current_section = [windows[i+1]]
+            current_word_count = next_words
         else:
             current_section.append(windows[i+1])
+            current_word_count += next_words
             
     if current_section:
         merged_sections.append(" ".join(current_section))
+
+    # If we still only got 1 section from a large document, force-split by size
+    if len(merged_sections) <= 1 and len(words) > 500:
+        return _force_split_by_size(text, target_words=500)
         
     results = []
     for i, content in enumerate(merged_sections):
@@ -155,6 +168,40 @@ def _split_by_topic_shift(text: str, chunk_size: int = 50) -> list[dict]:
             "section_type": sec_type
         })
     return results
+
+
+def _force_split_by_size(text: str, target_words: int = 500) -> list[dict]:
+    """Last-resort splitter that breaks text into chunks at sentence boundaries."""
+    sentences = re.split(r'(?<=[.!?])\s+', text)
+    sections = []
+    current_sents = []
+    current_wc = 0
+    
+    for sent in sentences:
+        sw = len(sent.split())
+        if current_wc + sw > target_words and current_sents:
+            content = " ".join(current_sents)
+            sections.append({
+                "index": len(sections),
+                "raw_text": content,
+                "word_count": current_wc,
+                "section_type": "body"
+            })
+            current_sents = []
+            current_wc = 0
+        current_sents.append(sent)
+        current_wc += sw
+    
+    if current_sents:
+        content = " ".join(current_sents)
+        sections.append({
+            "index": len(sections),
+            "raw_text": content,
+            "word_count": current_wc,
+            "section_type": "body"
+        })
+    
+    return sections
 
 def _split_by_rooms(blueprint_plain_english: str) -> list[dict]:
     rooms = ["bedroom", "bathroom", "kitchen", "living", "dining", "garage", "basement", "floor"]
@@ -204,3 +251,36 @@ def _split_by_rooms(blueprint_plain_english: str) -> list[dict]:
             idx += 1
             
     return results
+
+
+# Fix 3.3 — Merge pass: combine sections under min_words with their neighbour
+def merge_short_sections(sections: list, min_words: int = 80) -> list:
+    """
+    After detect_sections(), merge sections that are too short (<min_words)
+    into their preceding section. Prevents the summarizer from receiving
+    near-empty chunks that produce vague or repetitive output.
+    Call this before generate_all_subheadings().
+    """
+    merged = []
+    buffer = None
+
+    for section in sections:
+        if buffer is None:
+            buffer = dict(section)
+        elif buffer["word_count"] < min_words or section["word_count"] < min_words:
+            # Either the buffer is too short, or the incoming section is too short.
+            # Absorb this section into the buffer.
+            buffer["raw_text"] += "\n\n" + section["raw_text"]
+            buffer["word_count"] += section["word_count"]
+        else:
+            merged.append(buffer)
+            buffer = dict(section)
+
+    if buffer:
+        merged.append(buffer)
+
+    # Re-index
+    for i, s in enumerate(merged):
+        s["index"] = i
+
+    return merged

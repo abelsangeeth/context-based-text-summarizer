@@ -1,5 +1,5 @@
 """
-ContextFree-X — Batch CSV Handler
+Vision-Augmented LLM Pipeline for Long-Form Document Summarization — Batch CSV Handler
 ══════════════════════════════════
 Reads uploaded CSV files containing multiple texts to summarise.
 Auto-detects text and reference (ground-truth summary) columns.

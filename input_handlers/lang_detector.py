@@ -1,5 +1,5 @@
 """
-ContextFree-X — Language Detector
+Vision-Augmented LLM Pipeline for Long-Form Document Summarization — Language Detector
 ═════════════════════════════════
 Detects text language and routes to the best HuggingFace summarisation
 model.  Uses ``langdetect`` with a fixed seed for reproducibility.

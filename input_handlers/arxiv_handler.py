@@ -1,5 +1,5 @@
 """
-ContextFree-X — arXiv / Research Paper Handler
+Vision-Augmented LLM Pipeline for Long-Form Document Summarization — arXiv / Research Paper Handler
 ═══════════════════════════════════════════════
 Accepts:
   • arXiv ID         (e.g. "1706.03762")
@@ -60,13 +60,12 @@ def fetch_arxiv(query: str) -> dict:
             pdf_path = paper.download_pdf(dirpath=tmp_dir)
             if pdf_path and os.path.exists(pdf_path):
                 from input_handlers.pdf_handler import extract_pdf
-                # Open the downloaded PDF as a file object
-                with open(pdf_path, "rb") as f:
-                    # Give it a .name attribute for pdfplumber
-                    f.name = os.path.basename(pdf_path)
-                    pdf_result = extract_pdf(f)
-                    full_text = pdf_result.get("sections", {}).get("full_text")
-    except Exception:
+                # Pass the path directly to extract_pdf
+                pdf_result = extract_pdf(pdf_path)
+                full_text = pdf_result.get("sections", {}).get("full_text")
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
         # PDF download/parse failed — fall back to abstract only
         full_text = None
 
