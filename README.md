@@ -33,8 +33,9 @@ Python 3.11 is recommended.
 python -m venv venv311
 # Windows: venv311\Scripts\activate    macOS/Linux: source venv311/bin/activate
 
-# CPU-only PyTorch keeps the install small; skip this line if you have a CUDA GPU
-pip install torch --index-url https://download.pytorch.org/whl/cpu
+# CPU-only PyTorch keeps the install small; skip this line if you have a CUDA GPU.
+# Install torchvision from the same index, or pip pulls a mismatched build later.
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 pip install -r requirements.txt
 
 streamlit run app.py

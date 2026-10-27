@@ -19,7 +19,9 @@ jobs:
       - name: Install dependencies (CPU-only torch)
         run: |
           python -m pip install --upgrade pip
-          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          # torchvision must come from the same index as torch, or timm pulls a
+          # mismatched build from PyPI ("operator torchvision::nms does not exist")
+          pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
           pip install -r requirements.txt -r requirements-dev.txt
 
       # Fast suite only: no model downloads. Run `pytest -m slow` locally for

@@ -14,12 +14,10 @@ from collections import Counter
 from PIL import Image
 
 import torch
-from transformers import (
-    BlipProcessor,
-    BlipForConditionalGeneration,
-    DetrImageProcessor,
-    DetrForObjectDetection,
-)
+
+# The BLIP / DETR classes are imported inside the loaders: they pull in
+# torchvision, and a missing or mismatched torchvision should only break the
+# Image tab, not every page that imports this module.
 
 
 # ── Model cache (lazy-loaded singletons) ──────────────────────────────
@@ -36,6 +34,7 @@ def _get_device() -> str:
 def _load_blip():
     global _blip_processor, _blip_model
     if _blip_processor is None:
+        from transformers import BlipProcessor, BlipForConditionalGeneration
         _blip_processor = BlipProcessor.from_pretrained(
             "Salesforce/blip-image-captioning-large"
         )
@@ -49,6 +48,7 @@ def _load_blip():
 def _load_detr():
     global _detr_processor, _detr_model
     if _detr_processor is None:
+        from transformers import DetrImageProcessor, DetrForObjectDetection
         _detr_processor = DetrImageProcessor.from_pretrained(
             "facebook/detr-resnet-50"
         )
