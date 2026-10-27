@@ -1,18 +1,21 @@
 """
 Extracts structured room data from blueprint image.
-Tier 1: Claude Vision API (best accuracy)
+Tier 1: Claude Vision API (best accuracy) — needs ANTHROPIC_API_KEY in the environment
 Tier 2: LLaVA via Ollama (free, offline)
 Tier 3: pytesseract OCR (text-only fallback)
 """
 
 import os
-os.environ["ANTHROPIC_API_KEY"] = "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"
 import io
 import base64
 import json
-import time
 import re
 from PIL import Image
+
+CLAUDE_MODEL = os.environ.get("COMPASS_CLAUDE_MODEL", "claude-opus-5-5")
+# Claude Opus 5.5 reads images up to 2576 px on the long edge; larger
+# images only cost upload time, so downscale before encoding.
+_CLAUDE_MAX_EDGE = 2576
 
 # ── Shared prompt ───────────────────────────────────────────
 EXTRACTION_PROMPT = """
@@ -69,36 +72,41 @@ Additional extraction rules:
 
 # ── Tier 1: Claude Vision ───────────────────────────────────
 def extract_with_claude(img: Image.Image) -> dict:
-    """Extract room data using Claude Vision API with retry logic."""
+    """Extract room data using the Claude Vision API.
+
+    The key is read from ANTHROPIC_API_KEY by the SDK; never hardcode it.
+    The SDK already retries rate limits, 5xx errors and dropped connections.
+    """
     import anthropic
 
-    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
-    img_b64 = _pil_to_base64(img)
+    client = anthropic.Anthropic(max_retries=3)
+    img_b64 = _pil_to_base64(_fit_for_claude(img))
 
-    for attempt in range(3):
-        try:
-            response = client.messages.create(
-                model="claude-opus-4-5",
-                max_tokens=3000,
-                messages=[{
-                    "role": "user",
-                    "content": [
-                        {"type": "image",
-                         "source": {"type": "base64",
-                                    "media_type": "image/jpeg",
-                                    "data": img_b64}},
-                        {"type": "text", "text": EXTRACTION_PROMPT}
-                    ]
-                }]
-            )
-            raw = response.content[0].text
-            return _safe_parse_json(raw)
+    response = client.beta.messages.create(
+        model=CLAUDE_MODEL,
+        max_tokens=16000,
+        output_config={"effort": "high"},
+        # If a safety classifier declines, re-run on Anthropic's
+        # recommended fallback model instead of failing the extraction.
+        betas=["server-side-fallback-2026-07-01"],
+        fallbacks="default",
+        messages=[{
+            "role": "user",
+            "content": [
+                {"type": "image",
+                 "source": {"type": "base64",
+                            "media_type": "image/jpeg",
+                            "data": img_b64}},
+                {"type": "text", "text": EXTRACTION_PROMPT}
+            ]
+        }]
+    )
+    if response.stop_reason == "refusal":
+        raise ValueError("Claude declined to analyse this image.")
 
-        except Exception as e:
-            if attempt < 2:
-                time.sleep(2 ** attempt)   # exponential backoff
-            else:
-                raise e
+    # Thinking blocks come before the answer, so pick the text block explicitly.
+    raw = next((b.text for b in response.content if b.type == "text"), "")
+    return _safe_parse_json(raw)
 
 
 # ── Tier 2: LLaVA via Ollama (local, free) ──────────────────
@@ -241,10 +249,19 @@ def extract_with_best_available(img: Image.Image,
 
 
 # ── Helpers ─────────────────────────────────────────────────
+def _fit_for_claude(img: Image.Image) -> Image.Image:
+    """Downscale so the long edge is at most what Claude reads (keeps aspect)."""
+    if max(img.size) <= _CLAUDE_MAX_EDGE:
+        return img
+    scaled = img.copy()
+    scaled.thumbnail((_CLAUDE_MAX_EDGE, _CLAUDE_MAX_EDGE), Image.LANCZOS)
+    return scaled
+
+
 def _pil_to_base64(img: Image.Image) -> str:
     """Convert PIL Image to base64-encoded JPEG string."""
     buf = io.BytesIO()
-    img.save(buf, format="JPEG", quality=95)
+    img.convert("RGB").save(buf, format="JPEG", quality=95)
     return base64.b64encode(buf.getvalue()).decode()
 
 
