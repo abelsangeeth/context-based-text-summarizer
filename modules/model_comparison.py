@@ -23,7 +23,7 @@ class ModelComparison:
 
             model_module = ModelModule(model_name)
             tokenizer, model = model_module.load_model()
-            inference = InferenceModule(model, tokenizer)
+            inference = InferenceModule(model, tokenizer, model_name)
 
             predictions = []
             references = []

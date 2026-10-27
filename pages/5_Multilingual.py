@@ -1,14 +1,13 @@
 """Page 5 — Multilingual: Language detection + mT5 summarization + translation."""
 
+import html
 import streamlit as st
 import torch
 from summarizer.models import load_model, get_model_label
 from summarizer.pipeline import summarize
-from input_handlers.lang_detector import detect_language, SUPPORTED_LANGUAGES, TRANSLATION_MODELS
+from input_handlers.lang_detector import detect_language, count_words, SUPPORTED_LANGUAGES, TRANSLATION_MODELS
 from input_handlers.cleaner import clean_text as deep_clean
 from evaluation.bert_scorer import compute_bertscore
-from evaluation.aggregator import evaluate_all
-from transformers import AutoTokenizer, T5ForConditionalGeneration, BartForConditionalGeneration
 
 from components.stitch_theme import apply_stitch_theme, page_header, sidebar_brand, sidebar_nav, sidebar_footer
 
@@ -58,7 +57,11 @@ input_text = st.text_area(
 )
 
 # --- Language detection ---
-if input_text.strip() and len(input_text.split()) >= 5:
+# count_words treats each Chinese/Japanese character as a word; str.split()
+# would count a whole unspaced paragraph as one.
+n_words = count_words(input_text)
+
+if input_text.strip() and n_words >= 5:
     lang_result = detect_language(input_text)
     lang_code = lang_result["code"]
     lang_name = lang_result["name"]
@@ -106,7 +109,7 @@ if input_text.strip() and len(input_text.split()) >= 5:
         st.info(f"Using **{get_model_label('mt5')}** for {lang_name} text.")
 
     generate = st.button("Summarize", type="primary",
-                         disabled=len(input_text.split()) < 10)
+                         disabled=n_words < 10)
 
     if generate:
         cleaned = deep_clean(input_text)
@@ -120,10 +123,10 @@ if input_text.strip() and len(input_text.split()) >= 5:
         with col_orig:
             st.markdown(f'<div class="cfx-section-title">{flag} {lang_name} Summary</div>', unsafe_allow_html=True)
             st.markdown(
-                f'<div class="cfx-output-card"><div class="cfx-summary-text">{summary}</div></div>',
+                f'<div class="cfx-output-card"><div class="cfx-summary-text">{html.escape(summary)}</div></div>',
                 unsafe_allow_html=True,
             )
-            st.caption(f"{len(summary.split())} words")
+            st.caption(f"{count_words(summary)} words")
 
         with col_en:
             if lang_code != "en":
@@ -131,7 +134,7 @@ if input_text.strip() and len(input_text.split()) >= 5:
                 with st.spinner("Translating to English..."):
                     translated = translate_to_english(summary, lang_code)
                 st.markdown(
-                    f'<div class="cfx-output-card"><div class="cfx-summary-text">{translated}</div></div>',
+                    f'<div class="cfx-output-card"><div class="cfx-summary-text">{html.escape(translated)}</div></div>',
                     unsafe_allow_html=True,
                 )
                 st.caption(f"{len(translated.split())} words")

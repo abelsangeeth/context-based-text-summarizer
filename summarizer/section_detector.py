@@ -254,11 +254,16 @@ def _split_by_rooms(blueprint_plain_english: str) -> list[dict]:
 
 
 # Fix 3.3 — Merge pass: combine sections under min_words with their neighbour
-def merge_short_sections(sections: list, min_words: int = 80) -> list:
+def merge_short_sections(sections: list, min_words: int = 80, max_words: int = 500) -> list:
     """
     After detect_sections(), merge sections that are too short (<min_words)
     into their preceding section. Prevents the summarizer from receiving
     near-empty chunks that produce vague or repetitive output.
+
+    A short section is only absorbed while the result stays within
+    max_words (the topic-shift splitter's own section cap). Without that cap,
+    a document split into many ~50-word windows snowballed into one section
+    holding the whole text, so the "structured" summary had one paragraph.
     Call this before generate_all_subheadings().
     """
     merged = []
@@ -267,9 +272,12 @@ def merge_short_sections(sections: list, min_words: int = 80) -> list:
     for section in sections:
         if buffer is None:
             buffer = dict(section)
-        elif buffer["word_count"] < min_words or section["word_count"] < min_words:
-            # Either the buffer is too short, or the incoming section is too short.
-            # Absorb this section into the buffer.
+        elif buffer["word_count"] < min_words or (
+            section["word_count"] < min_words
+            and buffer["word_count"] + section["word_count"] <= max_words
+        ):
+            # The buffer is too short to stand alone, or the incoming section is
+            # too short and still fits. Absorb this section into the buffer.
             buffer["raw_text"] += "\n\n" + section["raw_text"]
             buffer["word_count"] += section["word_count"]
         else:
@@ -277,7 +285,12 @@ def merge_short_sections(sections: list, min_words: int = 80) -> list:
             buffer = dict(section)
 
     if buffer:
-        merged.append(buffer)
+        if buffer["word_count"] < min_words and merged:
+            # Don't leave a near-empty section at the end
+            merged[-1]["raw_text"] += "\n\n" + buffer["raw_text"]
+            merged[-1]["word_count"] += buffer["word_count"]
+        else:
+            merged.append(buffer)
 
     # Re-index
     for i, s in enumerate(merged):

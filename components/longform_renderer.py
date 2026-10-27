@@ -1,3 +1,4 @@
+import html
 import streamlit as st
 import io
 
@@ -18,7 +19,7 @@ def render_longform_summary(longform: dict, selected_sec: str = "-- Document Ove
             badge = f'<span style="font-size: 11px; color: #888; margin-top: 4px; display: inline-block;">{sec["word_count"]} words</span>'
 
         sec_html = f"""<div style="margin-bottom: 28px;">
-<p style="font-size: 15px; line-height: 1.8; color: var(--text-color); margin: 0;">{sec['summary_paragraph']}</p>
+<p style="font-size: 15px; line-height: 1.8; color: var(--text-color); margin: 0;">{html.escape(sec['summary_paragraph'])}</p>
 {badge}
 </div>"""
         html_sections += sec_html

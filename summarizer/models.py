@@ -1,29 +1,25 @@
 """Unified model registry with lazy loading and GPU auto-detection."""
 
 import os
+import threading
+from functools import lru_cache
+
 import yaml
 import torch
-import streamlit as st
-from transformers import (
-    AutoTokenizer,
-    BartForConditionalGeneration,
-    T5ForConditionalGeneration,
-    PegasusForConditionalGeneration,
-)
-
-# Map model key prefixes to their HuggingFace model class
-_MODEL_CLASS_MAP = {
-    "bart": BartForConditionalGeneration,
-    "t5": T5ForConditionalGeneration,
-    "pegasus": PegasusForConditionalGeneration,
-    "mt5": T5ForConditionalGeneration,  # mT5 shares T5 architecture
-}
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "..", "config", "model_config.yaml")
 
+# Loaded (tokenizer, model) pairs, shared by every Streamlit session and API
+# request in this process. The lock stops two sessions from loading the same
+# multi-GB checkpoint at once.
+_LOADED: dict = {}
+_LOAD_LOCK = threading.Lock()
 
+
+@lru_cache(maxsize=1)
 def _load_config() -> dict:
-    """Load model configuration from YAML."""
+    """Load model configuration from YAML (read once per process)."""
     with open(CONFIG_PATH, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
 
@@ -56,33 +52,25 @@ def get_model_color(model_key: str) -> str:
     return get_model_config(model_key).get("color", "#6B7280")
 
 
-@st.cache_resource(show_spinner=False)
 def load_model(model_key: str):
     """
     Lazily load and cache a (tokenizer, model) tuple.
-    Uses @st.cache_resource so each model is loaded only once per session.
-    Works uniformly for T5, BART, PEGASUS, and mT5 architectures.
+    Each model is loaded once per process and reused by every caller.
+    AutoModelForSeq2SeqLM picks the right class (BART, T5, PEGASUS, mT5)
+    from the checkpoint's own config.
     """
-    cfg = get_model_config(model_key)
-    hf_name = cfg["hf_name"]
-    device = get_device()
+    if model_key in _LOADED:
+        return _LOADED[model_key]
 
-    tokenizer = AutoTokenizer.from_pretrained(hf_name)
-
-    # Pick the right model class based on model key
-    model_cls = None
-    for prefix, cls in _MODEL_CLASS_MAP.items():
-        if prefix in model_key:
-            model_cls = cls
-            break
-    if model_cls is None:
-        raise ValueError(f"No model class mapped for key: {model_key}")
-
-    model = model_cls.from_pretrained(hf_name)
-    model = model.to(device)
-    model.eval()
-
-    return tokenizer, model
+    with _LOAD_LOCK:
+        if model_key not in _LOADED:
+            hf_name = get_model_config(model_key)["hf_name"]
+            tokenizer = AutoTokenizer.from_pretrained(hf_name)
+            model = AutoModelForSeq2SeqLM.from_pretrained(hf_name)
+            model = model.to(get_device())
+            model.eval()
+            _LOADED[model_key] = (tokenizer, model)
+    return _LOADED[model_key]
 
 
 def get_weights_config() -> dict:
