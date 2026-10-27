@@ -7,6 +7,7 @@ from input_handlers.cleaner import clean_text as deep_clean
 from evaluation.aggregator import (
     evaluate_all, composite_score, rank_models,
     generate_recommendation_text, abstractiveness_score, compression_ratio,
+    SOURCE_MODE_NOTE, REFERENCE_MODE_NOTE,
 )
 from components.radar_chart import render_radar_chart, render_ranking_bar, render_scores_table
 from components.export_utils import export_csv_button, export_json_button, scores_to_dataframe
@@ -40,7 +41,8 @@ st.divider()
 
 if run and input_text.strip():
     cleaned = deep_clean(input_text)
-    reference = ref_text.strip() if ref_text.strip() else cleaned
+    has_ref = bool(ref_text.strip())
+    reference = ref_text.strip() if has_ref else cleaned
 
     all_scores = {}
     all_summaries = {}
@@ -55,7 +57,7 @@ if run and input_text.strip():
         summary = summarize(cleaned, model_key)
         all_summaries[model_key] = summary
 
-        scores = evaluate_all([summary], [reference])
+        scores = evaluate_all([summary], [reference], against_source=not has_ref)
         all_scores[model_key] = scores
 
         novel_metrics[model_key] = {
@@ -67,6 +69,7 @@ if run and input_text.strip():
 
     # --- Recommendation ---
     st.info(generate_recommendation_text(all_scores))
+    st.caption(REFERENCE_MODE_NOTE if has_ref else SOURCE_MODE_NOTE)
 
     # --- Radar + Ranking ---
     col1, col2 = st.columns([1, 1])

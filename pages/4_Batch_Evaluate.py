@@ -63,17 +63,20 @@ if uploaded:
         for idx in range(max_rows):
             row = df.iloc[idx]
             text = deep_clean(str(row["text"]))
-            ref = str(row.get("reference", "")) if has_ref else text
+            ref = row.get("reference", "") if has_ref else ""
+            ref = "" if pd.isna(ref) else str(ref).strip()
 
             progress.progress((idx + 1) / max_rows,
                               text=f"Processing row {idx + 1}/{max_rows}...")
 
             summary = summarize(text, model_key)
-            scores = evaluate_all([summary], [ref if ref.strip() else text])
+            # Rows without a reference fall back to the source text, scored in source mode
+            scores = evaluate_all([summary], [ref or text], against_source=not ref)
             scores["Composite"] = composite_score(scores)
 
             result_row = {
                 "Row": idx + 1,
+                "Scored against": "reference" if ref else "source",
                 "Text (preview)": text[:100] + "...",
                 "Summary": summary,
             }

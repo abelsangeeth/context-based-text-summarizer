@@ -12,7 +12,6 @@ Streamlit is NOT modified.
 from __future__ import annotations
 
 import io
-import json
 import os
 import sys
 import traceback
@@ -46,7 +45,8 @@ from input_handlers.pdf_handler    import extract_pdf
 from input_handlers.url_handler    import scrape_url
 from input_handlers.youtube_handler import extract_youtube, is_valid_youtube_url
 from input_handlers.arxiv_handler  import fetch_arxiv
-from input_handlers.lang_detector  import detect_language, SUPPORTED_LANGUAGES, TRANSLATION_MODELS
+from input_handlers.lang_detector  import detect_language, count_words, SUPPORTED_LANGUAGES, TRANSLATION_MODELS
+from app_history import get_history as _load_history
 from evaluation.aggregator import (
     evaluate_all, composite_score, pick_best_model,
     rank_models, generate_recommendation_text,
@@ -57,25 +57,37 @@ from evaluation.aggregator import (
 # HELPERS
 # ─────────────────────────────────────────────────────────────────────────────
 
-HISTORY_PATH = os.path.join(ROOT, "summary_history.json")
-
-
-def _load_history() -> list:
-    if os.path.exists(HISTORY_PATH):
-        try:
-            with open(HISTORY_PATH, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            return []
-    return []
-
-
-def _metrics_for(summary: str, reference: str, source: str) -> dict:
-    scores = evaluate_all([summary], [reference])
+def _metrics_for(summary: str, source: str, reference: Optional[str] = None) -> dict:
+    """Score against the human reference when given, otherwise against the source."""
+    reference = (reference or "").strip()
+    scores = evaluate_all([summary], [reference or source], against_source=not reference)
     scores["abstractiveness"] = abstractiveness_score(summary, source)
     scores["compression"]     = compression_ratio(summary, source)
     scores["composite"]       = composite_score(scores)
+    scores["scored_against"]  = "reference" if reference else "source"
     return scores
+
+
+_translators: dict = {}
+
+
+def _translate_to_english(text: str, lang_code: str) -> Optional[str]:
+    """Translate with Helsinki-NLP MarianMT; each model is loaded once per process."""
+    model_name = TRANSLATION_MODELS.get(lang_code)
+    if not model_name:
+        return None
+    import torch
+    from transformers import MarianMTModel, MarianTokenizer
+    if model_name not in _translators:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        tok = MarianTokenizer.from_pretrained(model_name)
+        mdl = MarianMTModel.from_pretrained(model_name).to(device).eval()
+        _translators[model_name] = (tok, mdl, device)
+    tok, mdl, device = _translators[model_name]
+    inputs = tok(text, return_tensors="pt", max_length=512, truncation=True).to(device)
+    with torch.no_grad():
+        out = mdl.generate(inputs["input_ids"], max_length=512, num_beams=4)
+    return tok.decode(out[0], skip_special_tokens=True)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -117,8 +129,7 @@ def summarize_text(req: SummarizeTextRequest):
             raise HTTPException(400, "Text too short (need ≥ 10 words).")
         use_long = len(cleaned.split()) > 900
         summary  = summarize_long(cleaned, req.model) if use_long else summarize(cleaned, req.model)
-        ref      = req.reference.strip() if req.reference else cleaned
-        metrics  = _metrics_for(summary, ref, cleaned)
+        metrics  = _metrics_for(summary, cleaned, req.reference)
         return {"summary": summary, "metrics": metrics, "word_count": len(summary.split())}
     except HTTPException:
         raise
@@ -158,7 +169,7 @@ async def summarize_pdf(
         cleaned = deep_clean(input_text)
         use_long = len(cleaned.split()) > 900
         summary  = summarize_long(cleaned, model) if use_long else summarize(cleaned, model)
-        metrics  = _metrics_for(summary, cleaned, cleaned)
+        metrics  = _metrics_for(summary, cleaned)
 
         return {
             "summary":          summary,
@@ -191,7 +202,7 @@ def summarize_url(req: URLRequest):
         cleaned  = deep_clean(input_text)
         use_long = len(cleaned.split()) > 900
         summary  = summarize_long(cleaned, req.model) if use_long else summarize(cleaned, req.model)
-        metrics  = _metrics_for(summary, cleaned, cleaned)
+        metrics  = _metrics_for(summary, cleaned)
         return {
             "summary":   summary,
             "metrics":   metrics,
@@ -242,7 +253,7 @@ def summarize_youtube(req: YouTubeRequest):
         cleaned  = deep_clean(input_text)
         use_long = len(cleaned.split()) > 900
         summary  = summarize_long(cleaned, req.model) if use_long else summarize(cleaned, req.model)
-        metrics  = _metrics_for(summary, cleaned, cleaned)
+        metrics  = _metrics_for(summary, cleaned)
         return {
             "summary":          summary,
             "metrics":          metrics,
@@ -275,7 +286,7 @@ def summarize_arxiv(req: ArXivRequest):
         cleaned  = deep_clean(input_text)
         use_long = len(cleaned.split()) > 900
         summary  = summarize_long(cleaned, req.model) if use_long else summarize(cleaned, req.model)
-        metrics  = _metrics_for(summary, cleaned, cleaned)
+        metrics  = _metrics_for(summary, cleaned)
         return {
             "summary":       summary,
             "metrics":       metrics,
@@ -308,15 +319,10 @@ def compare_models(req: CompareRequest):
             raise HTTPException(400, "Text too short.")
         use_long  = len(cleaned.split()) > 900
         models    = req.models if req.models else [m for m in list_models() if m != "mt5"]
-        reference = req.reference.strip() if req.reference else cleaned
-
         results = {}
         for mk in models:
             summary = summarize_long(cleaned, mk) if use_long else summarize(cleaned, mk)
-            metrics = evaluate_all([summary], [reference])
-            metrics["abstractiveness"] = abstractiveness_score(summary, cleaned)
-            metrics["compression"]     = compression_ratio(summary, cleaned)
-            metrics["composite"]       = composite_score(metrics)
+            metrics = _metrics_for(summary, cleaned, req.reference)
             results[mk] = {
                 "label":   get_model_label(mk),
                 "color":   get_model_color(mk),
@@ -353,7 +359,7 @@ def metrics_dashboard(req: MetricsRequest):
         if len(cleaned.split()) < 10:
             raise HTTPException(400, "Text too short.")
         models    = req.models if req.models else [m for m in list_models() if m != "mt5"]
-        reference = req.reference.strip() if req.reference else cleaned
+        reference = (req.reference or "").strip()
 
         all_scores     = {}
         all_summaries  = {}
@@ -362,7 +368,7 @@ def metrics_dashboard(req: MetricsRequest):
         for mk in models:
             summary = summarize(cleaned, mk)
             all_summaries[mk] = summary
-            scores = evaluate_all([summary], [reference])
+            scores = evaluate_all([summary], [reference or cleaned], against_source=not reference)
             all_scores[mk]    = scores
             novel_metrics[mk] = {
                 "abstractiveness": abstractiveness_score(summary, cleaned),
@@ -379,6 +385,7 @@ def metrics_dashboard(req: MetricsRequest):
             "novel_metrics":  novel_metrics,
             "ranking":        ranking,
             "recommendation": recommendation,
+            "scored_against": "reference" if reference else "source",
             "model_meta": {
                 mk: {"label": get_model_label(mk), "color": get_model_color(mk)}
                 for mk in models
@@ -410,10 +417,12 @@ async def batch_evaluate(
         for idx in range(max_rows):
             row     = df.iloc[idx]
             text    = deep_clean(str(row["text"]))
-            ref     = str(row.get("reference", "")) if has_ref else text
+            ref     = row.get("reference", "") if has_ref else ""
+            ref     = "" if pd.isna(ref) else str(ref).strip()
             summary = summarize(text, model)
-            scores  = evaluate_all([summary], [ref if ref.strip() else text])
+            scores  = evaluate_all([summary], [ref or text], against_source=not ref)
             scores["composite"] = composite_score(scores)
+            scores["scored_against"] = "reference" if ref else "source"
             results.append({
                 "row":     idx + 1,
                 "preview": text[:120] + "…",
@@ -450,7 +459,7 @@ class MultilingualRequest(BaseModel):
 def multilingual_summarize(req: MultilingualRequest):
     try:
         cleaned   = deep_clean(req.text)
-        if len(cleaned.split()) < 5:
+        if count_words(cleaned) < 5:
             raise HTTPException(400, "Text too short.")
 
         lang_result = detect_language(req.text)
@@ -469,20 +478,7 @@ def multilingual_summarize(req: MultilingualRequest):
         translated = None
         if lang_code != "en":
             try:
-                import torch
-                from transformers import MarianMTModel, MarianTokenizer
-                model_name = TRANSLATION_MODELS.get(lang_code)
-                if model_name:
-                    tok = MarianTokenizer.from_pretrained(model_name)
-                    mdl = MarianMTModel.from_pretrained(model_name)
-                    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-                    mdl = mdl.to(device).eval()
-                    inputs = tok(summary, return_tensors="pt",
-                                 max_length=512, truncation=True).to(device)
-                    with torch.no_grad():
-                        out = mdl.generate(inputs["input_ids"],
-                                           max_length=512, num_beams=4)
-                    translated = tok.decode(out[0], skip_special_tokens=True)
+                translated = _translate_to_english(summary, lang_code)
             except Exception:
                 translated = "(Translation unavailable)"
 
@@ -599,11 +595,15 @@ async def blueprint_analyze(
 # ── History ───────────────────────────────────────────────────────────────────
 @app.get("/api/history")
 def get_history(limit: int = 50):
+    # The file is stored newest-first; return the newest `limit` entries in
+    # chronological order (the Stitch UI reverses them for display).
     history = _load_history()
-    return {"history": history[-limit:], "total": len(history)}
+    return {"history": history[:limit][::-1], "total": len(history)}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("api_server:app", host="0.0.0.0", port=8502, reload=True)
+    # Local-only by default (CORS is wide open); set COMPASS_API_HOST=0.0.0.0 to expose it on the LAN.
+    uvicorn.run("api_server:app", host=os.environ.get("COMPASS_API_HOST", "127.0.0.1"),
+                port=8502, reload=True)
