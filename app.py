@@ -107,7 +107,7 @@ st.markdown(
     <table class="vs-table">
     <tr><th>Capability</th><th>ChatGPT / Gemini</th><th>COMPASS</th></tr>
     <tr><td>Evaluation scores</td><td>❌ None</td><td>✅ ROUGE + BLEU + BERTScore + METEOR</td></tr>
-    <tr><td>Semantic scoring</td><td>❌</td><td>✅ BERTScore F1 with baseline rescaling</td></tr>
+    <tr><td>Semantic scoring</td><td>❌</td><td>✅ BERTScore F1 (RoBERTa-large embeddings)</td></tr>
     <tr><td>Model comparison</td><td>❌ Single model</td><td>✅ 5 models simultaneously</td></tr>
     <tr><td>Abstractiveness metric</td><td>❌</td><td>✅ Novel n-gram novelty score</td></tr>
     <tr><td>Multi-language</td><td>⚠️ Prompt-based</td><td>✅ Auto-detect + mT5 routing</td></tr>

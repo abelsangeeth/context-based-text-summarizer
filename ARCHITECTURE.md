@@ -1,4 +1,4 @@
-# ContextFree-X — System Architecture
+# COMPASS — System Architecture
 
 > **Vision-Augmented LLM Pipeline for Long-Form Document Summarization**
 
@@ -8,7 +8,7 @@
 
 ## Overview
 
-ContextFree-X is a research-grade, multi-domain text summarization system built on top of HuggingFace transformer models. It supports diverse input modalities, multiple summarization models, multilingual routing, structured evaluation metrics, and a multi-page Streamlit frontend — all running **fully offline and locally**.
+COMPASS (formerly ContextFree-X) is a research-grade, multi-domain text summarization system built on top of HuggingFace transformer models. It supports diverse input modalities, multiple summarization models, multilingual routing, structured evaluation metrics, and a multi-page Streamlit frontend — all running **fully offline and locally**.
 
 ---
 
@@ -192,4 +192,4 @@ Input Router (type detection)
 
 ---
 
-*Generated for ContextFree-X — Research-Grade Multi-Domain Text Summarizer*
+*COMPASS — Research-Grade Multi-Domain Text Summarizer*

@@ -1,9 +1,0 @@
-Original Text length: 5360 words
-[Cleaner Test]: This is an orphan And another see? Yes !
-
-Running summarize_long with bart-cnn...
-
-[Final Summary length: 70 words]
---------------------------------------------------
-The study was funded by the National Institute of Standards and Technology (NIST) and the University of California, San Diego (UCSD) It is the first of its kind to be carried out by the U.S. Department of Education. The main purpose of the study is to show that the use of structured long texts can be used to create a more efficient and accurate version of a popular text-to-speech tool.
---------------------------------------------------
