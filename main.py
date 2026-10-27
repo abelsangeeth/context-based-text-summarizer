@@ -6,7 +6,7 @@ text = "Artificial intelligence is transforming industries."
 model_module = ModelModule("facebook/bart-large-cnn")
 tokenizer, model = model_module.load_model()
 
-inference = InferenceModule(model, tokenizer)
+inference = InferenceModule(model, tokenizer, "facebook/bart-large-cnn")
 summary = inference.generate_summary(text)
 
 print("Generated Summary:\n", summary)

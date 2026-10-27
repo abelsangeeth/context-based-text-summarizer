@@ -148,6 +148,8 @@ def chunk_text(
     while start < len(words):
         end = start + max_words
         chunks.append(" ".join(words[start:end]))
+        if end >= len(words):
+            break  # reached the end; a further chunk would only repeat this one's tail
         start += step
 
     return chunks

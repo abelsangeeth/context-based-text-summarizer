@@ -45,6 +45,9 @@ def summarize(text: str, model_key: str, **kwargs) -> str:
         "no_repeat_ngram_size": 3,
         "length_penalty": 2.0,
     }
+    # Optional per-model overrides from config/model_config.yaml, e.g.
+    #   generation: {no_repeat_ngram_size: 2}
+    gen_kwargs.update(cfg.get("generation") or {})
     gen_kwargs.update(kwargs)
 
     with torch.no_grad():

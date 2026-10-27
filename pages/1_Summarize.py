@@ -1,5 +1,6 @@
 """Page 1 — Summarize: Input text, PDF, URL, YouTube, arXiv, or image and get a summary."""
 
+import html
 import streamlit as st
 from summarizer.models import list_models, get_model_label, load_model
 from summarizer.pipeline import summarize, summarize_long
@@ -159,10 +160,10 @@ with tab_arxiv:
                 f"""<div class="cfx-card" style="margin-bottom: 16px;">
                     <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:1.05rem;
                                 color:#191b23;margin-bottom:6px;">
-                        {arxiv_result['title']}
+                        {html.escape(arxiv_result['title'])}
                     </div>
                     <div style="font-size:0.82rem;color:#727785;margin-bottom:4px;">
-                        {', '.join(arxiv_result['authors'][:5])}
+                        {html.escape(', '.join(arxiv_result['authors'][:5]))}
                         {'  +' + str(len(arxiv_result['authors']) - 5) + ' more'
                          if len(arxiv_result['authors']) > 5 else ''}
                     </div>
@@ -228,7 +229,7 @@ with tab_img:
                     <div class="cfx-metric-label">AI Caption</div>
                     <div style="font-family:'Inter',sans-serif;font-size:1.05rem;
                                 color:#191b23;line-height:1.6;margin-top:6px;">
-                        {img_result['caption']}
+                        {html.escape(img_result['caption'])}
                     </div>
                 </div>""",
                 unsafe_allow_html=True,
@@ -272,7 +273,6 @@ with tab_img:
 st.divider()
 
 from summarizer.section_detector import detect_sections, merge_short_sections
-from summarizer.subheading_generator import generate_all_subheadings
 from summarizer.longform_builder import build_longform_summary
 from input_handlers.cleaner import clean_text as deep_clean
 from components.longform_renderer import (render_longform_summary,
@@ -346,24 +346,30 @@ if word_count > 0:
             # Fix 3.3 — Merge sections under 80 words into their neighbour
             sections = merge_short_sections(sections, min_words=80)
 
-            st.toast(f"✅ {len(sections)} sections detected")
+            if not sections:
+                st.error("Not enough readable text left after cleaning to summarize.")
+                st.stop()
 
-        with st.spinner("Generating subheadings..."):
-            subheadings = generate_all_subheadings(sections, model_name=model_name)
+            st.toast(f"✅ {len(sections)} sections detected")
 
         # Pre-load model explicitly so user sees it loading (cache handles reuse)
         with st.spinner(f"Loading **{get_model_label(model_name)}** model..."):
             load_model(model_name)
 
         with st.spinner(f"Summarizing {len(sections)} sections with **{get_model_label(model_name)}**..."):
+            # Subheadings are not rendered (paragraph view), so they are not
+            # generated either: that saves one model call per section.
             longform = build_longform_summary(
                 sections=sections,
-                subheadings=subheadings,
                 model_name=model_name,
                 length_mode=length_mode
             )
-            # Retain history functionality
-            save_history(input_text, longform["sections"][0]["summary_paragraph"][:300] + "...", model_name)
+            # Save the whole summary, not just the start of the first paragraph
+            save_history(
+                input_text,
+                "\n\n".join(sec["summary_paragraph"] for sec in longform["sections"]),
+                model_name,
+            )
 
             # Save into session state
             st.session_state.longform_summary = longform
@@ -390,7 +396,7 @@ if "longform_summary" in st.session_state and st.session_state.longform_summary 
     st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    
+
     col1, col2 = st.columns(2)
     with col1:
         st.download_button(

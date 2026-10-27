@@ -1,5 +1,6 @@
 """Reusable summary card UI component for Streamlit."""
 
+import html
 import streamlit as st
 from summarizer.models import get_model_label, get_model_color
 from evaluation.aggregator import composite_score
@@ -35,7 +36,7 @@ def render_model_card(model_key: str, summary: str, metrics: dict = None,
             st.success("Best", icon="🏆")
 
     st.markdown(
-        f'<div style="font-size: 0.92em; line-height: 1.6;">{summary}</div>',
+        f'<div style="font-size: 0.92em; line-height: 1.6;">{html.escape(summary)}</div>',
         unsafe_allow_html=True,
     )
 

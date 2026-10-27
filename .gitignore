@@ -1,2 +1,23 @@
-venv311/ 
-__pycache__/ 
+# Virtual environments
+venv*/
+.venv/
+env/
+
+# Python caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Secrets — keep API keys out of git
+.env
+.env.*
+.streamlit/secrets.toml
+
+# Runtime data written by the app (personal summaries, not source)
+summary_history.json
+
+# Scratch output from local experiments
+out.txt
+output.txt
+*_out.txt
+*_out.json

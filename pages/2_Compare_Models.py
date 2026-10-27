@@ -1,5 +1,6 @@
 """Page 2 — Compare Models: Side-by-side 4-model comparison with metrics."""
 
+import html
 import streamlit as st
 from summarizer.models import list_models, get_model_label, get_model_color
 from summarizer.pipeline import summarize, summarize_long
@@ -8,6 +9,7 @@ from evaluation.aggregator import (
     evaluate_all, composite_score, pick_best_model,
     rank_models, generate_recommendation_text,
     abstractiveness_score, compression_ratio,
+    SOURCE_MODE_NOTE, REFERENCE_MODE_NOTE,
 )
 from components.model_card import render_model_card
 from components.export_utils import export_csv_button, export_summary_text, scores_to_dataframe
@@ -55,6 +57,8 @@ if run and input_text.strip():
     cleaned = deep_clean(input_text)
     word_count = len(cleaned.split())
     use_long = word_count > 900
+    has_ref = bool(ref_text.strip())
+    reference = ref_text.strip() if has_ref else cleaned
 
     summaries = {}
     all_metrics = {}
@@ -71,9 +75,7 @@ if run and input_text.strip():
                 s = summarize(cleaned, model_key)
             summaries[model_key] = s
 
-            # Compute metrics if reference is provided
-            reference = ref_text.strip() if ref_text.strip() else cleaned
-            metrics = evaluate_all([s], [reference])
+            metrics = evaluate_all([s], [reference], against_source=not has_ref)
             metrics["Abstractiveness"] = abstractiveness_score(s, cleaned)
             metrics["Compression"] = compression_ratio(s, cleaned)
             all_metrics[model_key] = metrics
@@ -85,6 +87,7 @@ if run and input_text.strip():
 
     # Recommendation
     st.info(generate_recommendation_text(all_metrics))
+    st.caption(REFERENCE_MODE_NOTE if has_ref else SOURCE_MODE_NOTE)
 
     # --- Model cards grid ---
     num_models = len(selected)
@@ -107,7 +110,7 @@ if run and input_text.strip():
                 f'<div style="border-left: 4px solid {color}; padding: 12px 16px; '
                 f'background: rgba(100,100,100,0.04); border-radius: 0 8px 8px 0; '
                 f'margin-bottom: 12px; font-size: 0.92em; line-height: 1.65;">'
-                f'{summaries[model_key]}</div>',
+                f'{html.escape(summaries[model_key])}</div>',
                 unsafe_allow_html=True,
             )
 

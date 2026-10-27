@@ -3,12 +3,16 @@ Aggregator — combines all metric scores, computes composite ranking,
 picks the best model, and generates human-readable recommendations.
 """
 
+import os
+
+import yaml
+
 from evaluation.rouge_scorer import compute_rouge
 from evaluation.bleu_scorer import compute_bleu
 from evaluation.bert_scorer import compute_bertscore
 from evaluation.meteor_scorer import compute_meteor
 
-WEIGHTS = {
+_DEFAULT_WEIGHTS = {
     "ROUGE-1":      0.20,
     "ROUGE-2":      0.20,
     "ROUGE-L":      0.15,
@@ -18,12 +22,40 @@ WEIGHTS = {
 }
 
 
+def _load_weights() -> dict:
+    """Composite weights from config/model_config.yaml, so editing them there takes effect."""
+    path = os.path.join(os.path.dirname(__file__), "..", "config", "model_config.yaml")
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return yaml.safe_load(f).get("weights") or _DEFAULT_WEIGHTS
+    except (OSError, yaml.YAMLError, AttributeError):
+        return _DEFAULT_WEIGHTS
+
+
+WEIGHTS = _load_weights()
+
+SOURCE_MODE_NOTE = (
+    "No reference summary given — scores compare each summary with the source "
+    "text. ROUGE is precision and BLEU is unigram precision here (how much of "
+    "the summary is supported by the source), not quality against a human summary."
+)
+REFERENCE_MODE_NOTE = (
+    "Scored against your reference summary: ROUGE F1, smoothed BLEU-4, "
+    "METEOR and BERTScore F1."
+)
+
+
 def evaluate_all(predictions: list[str], references: list[str],
-                 lang: str = "en") -> dict:
-    """Run all metrics and return a combined dict."""
+                 lang: str = "en", against_source: bool = False) -> dict:
+    """Run all metrics and return a combined dict.
+
+    Pass ``against_source=True`` when ``references`` are the source documents
+    rather than human-written summaries; ROUGE and BLEU then switch to their
+    precision forms (see compute_rouge / compute_bleu).
+    """
     results = {}
-    results.update(compute_rouge(predictions, references))
-    results.update(compute_bleu(predictions, references))
+    results.update(compute_rouge(predictions, references, against_source=against_source))
+    results.update(compute_bleu(predictions, references, against_source=against_source))
     results.update(compute_bertscore(predictions, references, lang=lang))
     results.update(compute_meteor(predictions, references))
     return results

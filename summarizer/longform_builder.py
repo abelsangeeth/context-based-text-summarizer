@@ -173,10 +173,17 @@ def _summarize_chunked_section(
 
 def build_longform_summary(
     sections: list,
-    subheadings: list,
+    subheadings: list | None = None,
     model_name: str = "bart-cnn",
     length_mode: str = "detailed",
 ) -> dict:
+    """Summarize each section into one paragraph.
+
+    ``subheadings`` is optional: the Summarize page renders paragraphs only, so
+    it skips generate_all_subheadings() (one extra model call per section).
+    """
+    if subheadings is None:
+        subheadings = [""] * len(sections)
 
     # Fix 2.2 — Raised min_length values per mode
     # max_length / min_length represent TOKENS, not words (tokens ≈ 1.3 × words)

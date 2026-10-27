@@ -1,11 +1,6 @@
-from transformers import (
-    BartTokenizer,
-    BartForConditionalGeneration,
-    T5Tokenizer,
-    T5ForConditionalGeneration,
-    PegasusTokenizer,
-    PegasusForConditionalGeneration
-)
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+
+from summarizer.models import restore_sinusoidal_positions
 
 
 class ModelModule:
@@ -15,19 +10,13 @@ class ModelModule:
 
     def load_model(self):
 
-        if "bart" in self.model_name:
-            tokenizer = BartTokenizer.from_pretrained(self.model_name)
-            model = BartForConditionalGeneration.from_pretrained(self.model_name, device_map=None)
-
-        elif "t5" in self.model_name:
-            tokenizer = T5Tokenizer.from_pretrained(self.model_name)
-            model = T5ForConditionalGeneration.from_pretrained(self.model_name, device_map=None)
-
-        elif "pegasus" in self.model_name:
-            tokenizer = PegasusTokenizer.from_pretrained(self.model_name)
-            model = PegasusForConditionalGeneration.from_pretrained(self.model_name, device_map=None)
-
-        else:
+        if not any(family in self.model_name for family in ("bart", "t5", "pegasus")):
             raise ValueError("Unsupported model")
+
+        # Auto* picks the right tokenizer/model class from the checkpoint config
+        tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+        model = AutoModelForSeq2SeqLM.from_pretrained(self.model_name)
+        # PEGASUS scored ROUGE 0.0 in an earlier run: its position tables were left random
+        restore_sinusoidal_positions(model)
 
         return tokenizer, model

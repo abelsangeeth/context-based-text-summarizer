@@ -8,8 +8,11 @@ def compute_bertscore(predictions: list[str],
                       references: list[str],
                       lang: str = "en") -> dict:
     """
-    Compute BERTScore Precision, Recall, F1.
-    rescale_with_baseline=True normalizes scores to a meaningful [0,1] range.
+    Compute BERTScore Precision, Recall, F1 with bert-score's default model
+    for ``lang`` (roberta-large for English). Scores are raw cosine-based
+    values, not baseline-rescaled, so most fluent summaries land around
+    0.8-0.9 — compare models against each other rather than reading the
+    absolute value.
     """
     device = "cuda" if torch.cuda.is_available() else "cpu"
     P, R, F1 = bert_score_fn(

@@ -33,6 +33,9 @@ def postprocess_summary(text: str) -> str:
     if not text:
         return text
 
+    # Step 0: PEGASUS-CNN/DM marks sentence breaks with a literal "<n>" token
+    text = text.replace("<n>", " ")
+
     # Step 1: Remove duplicate sentences
     text = remove_duplicate_sentences(text)
 

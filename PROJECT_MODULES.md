@@ -279,7 +279,7 @@ Wraps `rouge_score` library to compute ROUGE-1, ROUGE-2, and ROUGE-L F1 scores.
 Wraps `nltk.translate.bleu_score` for corpus-level BLEU.
 
 ### `evaluation/bert_scorer.py`
-Wraps `bert_score` library (baseline-rescaled F1) for semantic similarity evaluation.
+Wraps `bert_score` library (raw F1, not baseline-rescaled) for semantic similarity evaluation.
 
 ### `evaluation/meteor_scorer.py`
 Wraps `nltk` METEOR score for recall-oriented evaluation with stemming and synonym matching.
@@ -297,7 +297,7 @@ This sub-system enables COMPASS to analyze architectural blueprint images and ex
 
 | Tier | Method | Notes |
 |---|---|---|
-| **Tier 1** | `extract_with_claude(img)` | Claude Vision API (`claude-opus-4-5`). Best accuracy. Requires `ANTHROPIC_API_KEY`. Includes exponential-backoff retry. |
+| **Tier 1** | `extract_with_claude(img)` | Claude Vision API (`claude-opus-5-5`, override with `COMPASS_CLAUDE_MODEL`). Best accuracy. Reads `ANTHROPIC_API_KEY` from the environment; images are downscaled to 2576 px; the SDK retries transient errors and a server-side fallback model handles refusals. |
 | **Tier 2** | `extract_with_llava(img)` | LLaVA 13B via local Ollama server. Free, offline. Retries with progressively stronger prompts if the initial extraction is empty. |
 | **Tier 3** | `extract_with_ocr(img)` | pytesseract OCR fallback. Text-only; cannot infer spatial layout. Confidence: 0.40. |
 | **Auto** | `extract_with_best_available(img)` | Tries Claude → LLaVA → OCR in order. |

@@ -34,14 +34,20 @@ def chunk_text(text: str, max_words: int = 800, overlap: int = 100) -> list[str]
     while i < len(words):
         chunk = " ".join(words[i:i + max_words])
         chunks.append(chunk)
+        if i + max_words >= len(words):
+            break  # this chunk reached the end; another would only repeat its tail
         i += max_words - overlap
     return chunks
 
 
 def prepare_input(text: str, model_key: str) -> str:
-    """Prepare input text with appropriate prefix for T5 models."""
+    """Prepare input text with the task prefix the original T5 checkpoints expect.
+
+    mT5 (csebuetnlp/mT5_multilingual_XLSum) was fine-tuned on raw articles
+    with no prefix, so an English "summarize:" would only add noise there.
+    """
     text = clean_text(text)
-    if "t5" in model_key or "mt5" in model_key:
+    if model_key.startswith("t5"):
         if not text.lower().startswith("summarize:"):
             text = "summarize: " + text
     return text

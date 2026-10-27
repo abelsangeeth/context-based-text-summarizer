@@ -5,10 +5,24 @@ Detects text language and routes to the best HuggingFace summarisation
 model.  Uses ``langdetect`` with a fixed seed for reproducibility.
 """
 
+import re
+
 from langdetect import detect as _detect, DetectorFactory, LangDetectException
 
 # Reproducibility — must be set before any detection call
 DetectorFactory.seed = 42
+
+# Chinese and Japanese are written without spaces, so str.split() sees a whole
+# paragraph as one "word". Count each CJK character as a word instead.
+_CJK_CHARS = re.compile(r"[぀-ヿ㐀-䶿一-鿿豈-﫿]")
+
+
+def count_words(text: str) -> int:
+    """Word count that also works for scripts written without spaces."""
+    if not text:
+        return 0
+    cjk = len(_CJK_CHARS.findall(text))
+    return cjk + len(_CJK_CHARS.sub(" ", text).split())
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -55,7 +69,7 @@ def detect_language(text: str) -> dict:
         flag              – emoji flag
     """
     # Guard: text too short for reliable detection
-    if not text or len(text.split()) < 20:
+    if count_words(text) < 20:
         return {
             "code": "unknown",
             "name": "Unknown",
