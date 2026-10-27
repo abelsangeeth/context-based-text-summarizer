@@ -35,6 +35,7 @@ ezdxf>=1.1.0
 opencv-python-headless>=4.8.0
 pytesseract>=0.3.10
 anthropic>=2.3.0       # Claude Vision tier (fallbacks + output_config)
+python-dotenv>=1.0.0   # reads ANTHROPIC_API_KEY from a git-ignored .env
 ollama>=0.1.7
 
 # ── Advanced Summarization Features ──

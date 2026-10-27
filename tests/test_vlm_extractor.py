@@ -19,9 +19,15 @@ def test_no_api_key_in_source_tree():
 
 
 def test_import_does_not_set_api_key(monkeypatch):
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-    importlib.reload(vlm)
     import os
+    import dotenv
+
+    loaded = []
+    monkeypatch.setattr(dotenv, "load_dotenv", lambda path: loaded.append(path))
+    importlib.reload(vlm)
+
+    # The key may only come from the environment or the git-ignored .env at the repo root.
+    assert loaded == [ROOT / ".env"]
     assert "ANTHROPIC_API_KEY" not in os.environ
 
 

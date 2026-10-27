@@ -10,7 +10,16 @@ import io
 import base64
 import json
 import re
+from pathlib import Path
 from PIL import Image
+
+try:
+    from dotenv import load_dotenv
+    # A git-ignored .env at the repo root may hold ANTHROPIC_API_KEY;
+    # real environment variables still take precedence.
+    load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+except ImportError:
+    pass
 
 CLAUDE_MODEL = os.environ.get("COMPASS_CLAUDE_MODEL", "claude-opus-5-5")
 # Claude Opus 5.5 reads images up to 2576 px on the long edge; larger

@@ -59,7 +59,7 @@ binds to `127.0.0.1` only; set `COMPASS_API_HOST=0.0.0.0` to expose it on your n
 
 | For | You need |
 |---|---|
-| Blueprint → Claude Vision tier | `ANTHROPIC_API_KEY` in your environment (never in code). Uses `claude-opus-5-5`; override with `COMPASS_CLAUDE_MODEL`. |
+| Blueprint → Claude Vision tier | `ANTHROPIC_API_KEY` in your environment, or a line `ANTHROPIC_API_KEY=...` in a `.env` file at the repo root (git-ignored; never put the key in code). Uses `claude-opus-5-5`; override with `COMPASS_CLAUDE_MODEL`. |
 | Blueprint → LLaVA tier | [Ollama](https://ollama.com) running locally with `ollama pull llava:13b` |
 | Blueprint → OCR tier | Tesseract OCR installed (`packages.txt` lists the apt packages for Streamlit Cloud) |
 | Layout-aware PDF parsing | `layoutparser` plus a Detectron2 or EfficientDet backend. Without it, PyMuPDF reads the PDF's text layer, which handles two-column papers well. |

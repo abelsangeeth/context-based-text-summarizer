@@ -8,6 +8,13 @@ if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
 
+@pytest.fixture(autouse=True)
+def _no_real_claude_calls(monkeypatch):
+    # vlm_extractor loads a local .env on import; keep its key away from tests
+    # so nothing here can make a paid API call.
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+
+
 @pytest.fixture
 def make_pdf(tmp_path):
     """Write a PDF whose pages hold the given lines of text; returns its path."""
