@@ -3,7 +3,7 @@
 import html
 import streamlit as st
 import torch
-from summarizer.models import load_model, get_model_label
+from summarizer.models import get_model_label, restore_sinusoidal_positions
 from summarizer.pipeline import summarize
 from input_handlers.lang_detector import detect_language, count_words, SUPPORTED_LANGUAGES, TRANSLATION_MODELS
 from input_handlers.cleaner import clean_text as deep_clean
@@ -31,6 +31,7 @@ def load_translation_model(src_lang: str):
         return None, None
     tokenizer = MarianTokenizer.from_pretrained(model_name)
     model = MarianMTModel.from_pretrained(model_name)
+    restore_sinusoidal_positions(model)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
     model.eval()

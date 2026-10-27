@@ -38,7 +38,7 @@ app.add_middleware(
 )
 
 # ── Lazy imports (models load on first use) ───────────────────────────────────
-from summarizer.models   import list_models, get_model_label, get_model_color
+from summarizer.models   import list_models, get_model_label, get_model_color, restore_sinusoidal_positions
 from summarizer.pipeline import summarize, summarize_long
 from input_handlers.cleaner        import clean_text as deep_clean
 from input_handlers.pdf_handler    import extract_pdf
@@ -81,7 +81,9 @@ def _translate_to_english(text: str, lang_code: str) -> Optional[str]:
     if model_name not in _translators:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         tok = MarianTokenizer.from_pretrained(model_name)
-        mdl = MarianMTModel.from_pretrained(model_name).to(device).eval()
+        mdl = MarianMTModel.from_pretrained(model_name)
+        restore_sinusoidal_positions(mdl)
+        mdl = mdl.to(device).eval()
         _translators[model_name] = (tok, mdl, device)
     tok, mdl, device = _translators[model_name]
     inputs = tok(text, return_tensors="pt", max_length=512, truncation=True).to(device)

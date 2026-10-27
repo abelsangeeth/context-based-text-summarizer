@@ -1,5 +1,7 @@
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
+from summarizer.models import restore_sinusoidal_positions
+
 
 class ModelModule:
 
@@ -14,5 +16,7 @@ class ModelModule:
         # Auto* picks the right tokenizer/model class from the checkpoint config
         tokenizer = AutoTokenizer.from_pretrained(self.model_name)
         model = AutoModelForSeq2SeqLM.from_pretrained(self.model_name)
+        # PEGASUS scored ROUGE 0.0 in an earlier run: its position tables were left random
+        restore_sinusoidal_positions(model)
 
         return tokenizer, model

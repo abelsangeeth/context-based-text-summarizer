@@ -37,4 +37,5 @@ class InferenceModule:
             early_stopping=True
         )
 
-        return self.tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+        summary = self.tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+        return summary.replace("<n>", " ")  # PEGASUS sentence-break token
