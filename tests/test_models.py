@@ -56,3 +56,35 @@ def test_intact_position_tables_are_left_alone(monkeypatch):
 ])
 def test_postprocess_summary(raw, expected):
     assert postprocess_summary(raw) == expected
+
+
+def test_generation_overrides_from_config(monkeypatch):
+    import summarizer.pipeline as pipeline
+
+    captured = {}
+
+    class FakeTokenizer:
+        def __call__(self, text, **kw):
+            class Batch(dict):
+                def to(self, device):
+                    return self
+            return Batch(input_ids=torch.tensor([[1, 2, 3]]), attention_mask=torch.tensor([[1, 1, 1]]))
+
+        def decode(self, ids, skip_special_tokens=True):
+            return "a short summary"
+
+    class FakeModel:
+        def generate(self, input_ids, attention_mask=None, **kw):
+            captured.update(kw)
+            return torch.tensor([[1]])
+
+    cfg = {"max_input": 512, "max_output": 84, "min_output": 15,
+           "generation": {"no_repeat_ngram_size": 2}}
+    monkeypatch.setattr(pipeline, "get_model_config", lambda key: cfg)
+    monkeypatch.setattr(pipeline, "load_model", lambda key: (FakeTokenizer(), FakeModel()))
+
+    pipeline.summarize("word " * 50, "mt5")
+    assert captured["no_repeat_ngram_size"] == 2 and captured["max_length"] == 84
+
+    pipeline.summarize("word " * 50, "mt5", no_repeat_ngram_size=4)   # explicit kwargs still win
+    assert captured["no_repeat_ngram_size"] == 4
